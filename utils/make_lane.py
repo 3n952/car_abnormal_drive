@@ -86,11 +86,13 @@ def extract_lane_coord(json_dir):
 
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
-#     img_dir = '../datasets/01.원천데이터'
-#     json_dir = '../datasets/02.라벨링데이터'
+    img_dir = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\datasets\01.원천데이터'
+    json_dir = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\datasets\02.라벨링데이터'
+
 #     json_detail_dir = '../datasets/02.라벨링데이터/비정상/01. 방향지시등 불이행/p01_20221103_072002_an1_036_03'
 
 #     coord = extract_lane_coord(json_detail_dir)
 #     print(coord)
+    draw_lane(img_dir, json_dir )
