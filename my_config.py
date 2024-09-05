@@ -147,11 +147,11 @@ model = dict(
 
 # dataset settings
 dataset_type = "MyDataset"         # 구현한 dataloader 이름
-data_root = "/datasets/new_s3_datasets"         # 데이터셋 경로
-data_root_val = "/datasets/new_s3_datasets"     # 데이터셋 경로
-ann_file_train = "annotation/train_list.txt"    # train annotation 파일 경로
-ann_file_val = "annotation/valid_list.txt"      # valid annotation 파일 경로
-ann_file_test = "annotation/test_list.txt"      # test annotation 파일 경로
+data_root = "./dataset/new_s3_datasets"         # 데이터셋 경로
+data_root_val = "./dataset/new_s3_datasets"     # 데이터셋 경로
+ann_file_train = "./annotation/train_list.txt"    # train annotation 파일 경로
+ann_file_val = "./annotation/valid_list.txt"      # valid annotation 파일 경로
+ann_file_test = "./annotation/test_list.txt"      # test annotation 파일 경로
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False
 )
@@ -199,6 +199,7 @@ data = dict(
     workers_per_gpu=16,
     val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
     test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
+    
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
@@ -218,6 +219,7 @@ data = dict(
         pipeline=test_pipeline,
     ),
 )
+
 evaluation = dict(interval=5, metrics=["top_k_accuracy", "mean_class_accuracy"])
 
 # optimizer
