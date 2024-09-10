@@ -143,7 +143,7 @@ def test_ucf24_jhmdb21(cfg, epoch, model, test_loader):
             for i in range(output.size(0)):
                 boxes = all_boxes[i]
                 boxes = nms(boxes, nms_thresh)
-                if cfg.TRAIN.DATASET == 'ucf24':
+                if cfg.TRAIN.DATASET == 'ucf24' or cfg.TRAIN.DATASET == 'traffic' :
                     detection_path = os.path.join('ucf_detections', 'detections_'+str(epoch), frame_idx[i])
                     current_dir = os.path.join('ucf_detections', 'detections_'+str(epoch))
                     if not os.path.exists('ucf_detections'):

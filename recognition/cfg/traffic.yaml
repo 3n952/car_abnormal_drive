@@ -1,5 +1,5 @@
 TRAIN:
-  RESUME_PATH: "/usr/home/sut/YOWO/backup/ucf24/yowo_ucf24_16f_best_08181.pth"
+  RESUME_PATH: 
   DATASET: traffic  
   BATCH_SIZE: 10
   TOTAL_BATCH_SIZE: 128
@@ -18,9 +18,11 @@ SOLVER:
   OBJECT_SCALE: 5
   NOOBJECT_SCALE: 1
   CLASS_SCALE: 1
+
+
   COORD_SCALE: 1
 DATA:
-  NUM_FRAMES: 16
+  NUM_FRAMES: 10
   SAMPLING_RATE: 1
   TRAIN_JITTER_SCALES: [256, 320]
   TRAIN_CROP_SIZE: 224
@@ -28,26 +30,23 @@ DATA:
   MEAN: [0.4345, 0.4051, 0.3775]
   STD: [0.2768, 0.2713, 0.2737]
 MODEL:
-  NUM_CLASSES: 24
+  NUM_CLASSES: 8
   BACKBONE_3D: resnext101
   BACKBONE_2D: darknet
 WEIGHTS:
-  BACKBONE_3D: "weights/resnext-101-kinetics.pth"
-  BACKBONE_2D: "weights/yolo.weights"
+  BACKBONE_3D: "../weights/resnext-34-kinetics-cpu.pth"
+  BACKBONE_2D: "../weights/yolo.weights"
   FREEZE_BACKBONE_3D: False
   FREEZE_BACKBONE_2D: False
 LISTDATA:
-  BASE_PTH: "/usr/home/sut/datasets/ucf24"
-  TRAIN_FILE: "/usr/home/sut/datasets/ucf24/trainlist.txt"
-  TEST_FILE: "/usr/home/sut/datasets/ucf24/testlist.txt"
+  BASE_PTH: "../yowo_dataset_test"
+  TRAIN_FILE: "../yowo_dataset_test/splitfiles/trainlist.txt"
+  TEST_FILE: "../yowo_dataset_test/splitfiles/testlist.txt"
   TEST_VIDEO_FILE: "/usr/home/sut/datasets/ucf24/testlist_video.txt"
-  MAX_OBJS: 6
+  MAX_OBJS: 20
   CLASS_NAMES: [
-    "Basketball", "BasketballDunk", "Biking", "CliffDiving", "CricketBowling", 
-    "Diving", "Fencing", "FloorGymnastics", "GolfSwing", "HorseRiding",
-    "IceDancing", "LongJump", "PoleVault", "RopeClimbing", "SalsaSpin",
-    "SkateBoarding", "Skiing", "Skijet", "SoccerJuggling", "Surfing",
-    "TennisSwing", "TrampolineJumping", "VolleyballSpiking", "WalkingWithDog"
+    "정상", "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
+    "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
   ]
-BACKUP_DIR: "backup/ucf24"
+BACKUP_DIR: "backup/traffic"
 RNG_SEED: 1
