@@ -34,8 +34,9 @@ if not os.path.exists(cfg.BACKUP_DIR):
 
 ####### Create model
 # ---------------------------------------------------------------
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = YOWO(cfg)
-model = model.cuda()
+model = model.to(device)
 model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
 # print(model)
 pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -59,7 +60,7 @@ best_score   = 0 # initialize best score
 
 ####### Load resume path if necessary
 # ---------------------------------------------------------------
-if cfg.TRAIN.RESUME_PATH:
+if cfg.TRAIN.RESUME_PATH == None:
     print("===================================================================")
     print('loading checkpoint {}'.format(cfg.TRAIN.RESUME_PATH))
     checkpoint = torch.load(cfg.TRAIN.RESUME_PATH)
@@ -100,8 +101,8 @@ test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.
 
 loss_module   = RegionLoss(cfg).cuda()
 
-train = getattr(sys.modules[__name__], 'train_ucf24_jhmdb21')
-test  = getattr(sys.modules[__name__], 'test_ucf24_jhmdb21')
+train = getattr(sys.modules[__name__], 'train_traffic')
+test  = getattr(sys.modules[__name__], 'test_traffic')
 
 
 ####### Training and Testing Schedule
