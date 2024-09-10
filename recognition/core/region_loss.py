@@ -173,31 +173,41 @@ class RegionLoss(nn.Module):
         # resize the output (all parameters for each anchor can be reached)
         output   = output.view(nB, nA, (5+nC), nH, nW)
         # anchor's parameter tx
-        x    = torch.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([0]))).view(nB, nA, nH, nW))
+        # gpu mode => x    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([0])).view(nB, nA, nH, nW))
+        x    = torch.sigmoid(output.index_select(2, torch.LongTensor([0])).view(nB, nA, nH, nW))
         # anchor's parameter ty
-        y    = torch.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([1]))).view(nB, nA, nH, nW))
+        y    = torch.sigmoid(output.index_select(2, torch.LongTensor([1])).view(nB, nA, nH, nW))
         # anchor's parameter tw
-        w    = output.index_select(2, Variable(torch.cuda.LongTensor([2]))).view(nB, nA, nH, nW)
+        w    = output.index_select(2, torch.LongTensor([2])).view(nB, nA, nH, nW)
         # anchor's parameter th
-        h    = output.index_select(2, Variable(torch.cuda.LongTensor([3]))).view(nB, nA, nH, nW)
+        h    = output.index_select(2, torch.LongTensor([3])).view(nB, nA, nH, nW)
         # confidence score for each anchor
-        conf = torch.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([4]))).view(nB, nA, nH, nW))
+        conf = torch.sigmoid(output.index_select(2, torch.LongTensor([4])).view(nB, nA, nH, nW))
         # anchor's parameter class label
-        cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
+        #cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
+        cls  = output.index_select(2, torch.linspace(5,5+nC-1,nC).long())
+        
         # resize the data structure so that for every anchor there is a class label in the last dimension
         cls  = cls.view(nB*nA, nC, nH*nW).transpose(1,2).contiguous().view(nB*nA*nH*nW, nC)
         t1 = time.time()
 
         # for the prediction of localization of each bounding box, there exist 4 parameters (tx, ty, tw, th)
-        pred_boxes = torch.cuda.FloatTensor(4, nB*nA*nH*nW)
+        pred_boxes = torch.FloatTensor(4, nB*nA*nH*nW)
         # tx and ty
-        grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
-        grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+        # grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+        # grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+        grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
+        grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
+
         # for each anchor there are anchor_step variables (with the structure num_anchor*anchor_step)
         # for each row(anchor), the first variable is anchor's width, second is anchor's height
+
         # pw and ph
-        anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0])).cuda()
-        anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1])).cuda()
+        # anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0])).cuda()
+        # anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1])).cuda()
+        anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0]))
+        anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1]))
+
         # for each pixel (grid) repeat the above process (obtain width and height of each grid)
         anchor_w = anchor_w.repeat(nB, 1).repeat(1, 1, nH*nW).view(nB*nA*nH*nW)
         anchor_h = anchor_h.repeat(nB, 1).repeat(1, 1, nH*nW).view(nB*nA*nH*nW)
@@ -225,16 +235,21 @@ class RegionLoss(nn.Module):
         #  keep those with high box confidence scores (greater than 0.25) as our final predictions
         nProposals = int((conf > 0.25).sum().data.item())
 
-        tx    = Variable(tx.cuda())
-        ty    = Variable(ty.cuda())
-        tw    = Variable(tw.cuda())
-        th    = Variable(th.cuda())
-        tconf = Variable(tconf.cuda())
-        tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long().cuda())
+        # tx    = Variable(tx.cuda())
+        # ty    = Variable(ty.cuda())
+        # tw    = Variable(tw.cuda())
+        # th    = Variable(th.cuda())
+        # tconf = Variable(tconf.cuda())
+        # tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long().cuda())
 
-        coord_mask = Variable(coord_mask.cuda())
-        conf_mask  = Variable(conf_mask.cuda().sqrt())
-        cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cuda())
+        # coord_mask = Variable(coord_mask.cuda())
+        # conf_mask  = Variable(conf_mask.cuda().sqrt())
+        # cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cuda())
+        # cls        = cls[cls_mask].view(-1, nC)  
+
+        tcls = tcls.view(-1)[cls_mask.view(-1)].long()
+        conf_mask  = conf_mask.sqrt()
+        cls_mask   = cls_mask.view(-1, 1).repeat(1,nC)
         cls        = cls[cls_mask].view(-1, nC)  
 
         t3 = time.time()
