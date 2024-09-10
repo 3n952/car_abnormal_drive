@@ -5,9 +5,9 @@
 
 import argparse
 import sys
-
+import yaml
 from cfg.defaults import get_cfg
-
+from yacs.config import CfgNode
 
 def parse_args():
     """
@@ -36,7 +36,7 @@ def parse_args():
         "--cfg",
         dest="cfg_file",
         help="Path to the config file",
-        default="cfg/ava.yaml",
+        default="cfg/traffic.yaml",
         type=str,
     )
     parser.add_argument(
@@ -61,7 +61,13 @@ def load_config(args):
     cfg = get_cfg()
     # Load config from cfg.
     if args.cfg_file is not None:
-        cfg.merge_from_file(args.cfg_file)
+        # cfg.merge_from_file(args.cfg_file)
+
+        with open(args.cfg_file, 'r', encoding='utf-8') as f:
+            cfg_data = yaml.safe_load(f)
+
+        cfg_data = CfgNode(cfg_data)
+        cfg.merge_from_other_cfg(cfg_data)
     # Load config from command line, overwrite config from opts.
     if args.opts is not None:
         cfg.merge_from_list(args.opts)
