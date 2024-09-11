@@ -1,26 +1,27 @@
 TRAIN:
-  RESUME_PATH: "backup/traffic/yowo_traffic.pth"
+  RESUME_PATH: False
   DATASET: traffic  
-  BATCH_SIZE: 10
+  BATCH_SIZE: 8
   TOTAL_BATCH_SIZE: 128
   LEARNING_RATE: 1e-4
   EVALUATE: False
   FINE_TUNE: False
   BEGIN_EPOCH: 1
-  END_EPOCH: 10
+  END_EPOCH: 5
 SOLVER:
   MOMENTUM: 0.9
   WEIGHT_DECAY: 5e-4
   STEPS: [2, 3, 4, 5]
   LR_DECAY_RATE: 0.5
-  ANCHORS: [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979]
+  #ANCHORS: [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979]
+  ANCHORS: [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
   NUM_ANCHORS: 5
   OBJECT_SCALE: 5
   NOOBJECT_SCALE: 1
   CLASS_SCALE: 1
   COORD_SCALE: 1
 DATA:
-  NUM_FRAMES: 10
+  NUM_FRAMES: 8
   SAMPLING_RATE: 1
   TRAIN_JITTER_SCALES: [256, 320]
   TRAIN_CROP_SIZE: 224
@@ -32,7 +33,8 @@ MODEL:
   BACKBONE_3D: resnext101
   BACKBONE_2D: darknet
 WEIGHTS:
-  BACKBONE_3D: "weights/resnet-34-kinetics-cpu.pth"
+  # BACKBONE_3D: "weights/resnet-34-kinetics-cpu.pth"
+  BACKBONE_3D: False
   BACKBONE_2D: "weights/yolo.weights"
   FREEZE_BACKBONE_3D: False
   FREEZE_BACKBONE_2D: False
@@ -46,5 +48,5 @@ LISTDATA:
     "정상", "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
     "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
   ]
-BACKUP_DIR: "../backup/traffic"
+BACKUP_DIR: "backup/traffic"
 RNG_SEED: 1

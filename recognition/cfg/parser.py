@@ -68,6 +68,7 @@ def load_config(args):
 
         cfg_data = CfgNode(cfg_data)
         cfg.merge_from_other_cfg(cfg_data)
+        
     # Load config from command line, overwrite config from opts.
     if args.opts is not None:
         cfg.merge_from_list(args.opts)
