@@ -33,16 +33,18 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     nAnchors = nA*nH*nW
     nPixels  = nH*nW
     # for each image
-    for b in xrange(nB):
+    for b in range(nB):
         # get all anchor boxes in one image
         # (4 * nAnchors)
         cur_pred_boxes = pred_boxes[b*nAnchors:(b+1)*nAnchors].t()
         # initialize iou score for each anchor
         cur_ious = torch.zeros(nAnchors)
-        for t in xrange(50):
+        #for t in xrange(50):
             # for each anchor 4 coordinate parameters, already in the coordinate system for the whole image
             # this loop is for anchors in each image
             # for each anchor 5 parameters are available (class, x, y, w, h)
+        # traffic은 8 batch이므로 8 * 5 = 40
+        for t in range(40):
             if target[b][t*5+1] == 0:
                 break
             gx = target[b][t*5+1]*nW
@@ -63,9 +65,9 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     # number of ground truth
     nGT = 0
     nCorrect = 0
-    for b in xrange(nB):
+    for b in range(nB):
         # anchors for one batch (at least batch size, and for some specific classes, there might exist more than one anchor)
-        for t in xrange(50):
+        for t in range(40):
             if target[b][t*5+1] == 0:
                 break
             nGT = nGT + 1
@@ -280,7 +282,7 @@ class RegionLoss(nn.Module):
         self.l_total.update(loss.data.item(), self.batch)
 
 
-        if batch_idx % 20 == 0: 
+        if batch_idx % 8 == 0: 
             print('Epoch: [%d][%d/%d]:\t nGT %d, recall %d, proposals %d, loss: x %.2f(%.2f), '
                   'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), '
                   'cls %.2f(%.2f), total %.2f(%.2f)'
