@@ -201,7 +201,8 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     if train:
         return clip, label
     else:
-        return im_split[0] + '_' +im_split[1] + '_' + im_split[2], clip, label
+        #return im_split[0] + '_' +im_split[1] + '_' + im_split[2], clip, label
+        return fname, clip, label
 
 def load_data_detection_test(root, imgpath, train_dur, num_samples):
 
