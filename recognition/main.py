@@ -60,7 +60,7 @@ best_score   = 0 # initialize best score
 
 ####### Load resume path if necessary
 # ---------------------------------------------------------------
-if cfg.TRAIN.RESUME_PATH == None:
+if cfg.TRAIN.RESUME_PATH:
     print("===================================================================")
     print('loading checkpoint {}'.format(cfg.TRAIN.RESUME_PATH))
     checkpoint = torch.load(cfg.TRAIN.RESUME_PATH)
@@ -71,6 +71,8 @@ if cfg.TRAIN.RESUME_PATH == None:
     print("Loaded model score: ", checkpoint['score'])
     print("===================================================================")
     del checkpoint
+else:
+    pass
 
 
 ####### Create backup directory if necessary
@@ -101,6 +103,7 @@ test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.
 
 loss_module   = RegionLoss(cfg).cuda()
 
+# 임포트 모듈 중 train_traffic, test_traffic 가져오기
 train = getattr(sys.modules[__name__], 'train_traffic')
 test  = getattr(sys.modules[__name__], 'test_traffic')
 
