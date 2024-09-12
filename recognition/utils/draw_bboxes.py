@@ -13,9 +13,9 @@ def load_bbox_annotation(file_path):
             class_id = int(parts[0])
 
             #anchor 확인용
-            #x_min, y_min, x_max, y_max = map(float, parts[2:])
+            x_min, y_min, x_max, y_max = map(float, parts[2:])
 
-            x_min, y_min, x_max, y_max = map(float, parts[1:])
+            #x_min, y_min, x_max, y_max = map(float, parts[1:])
             
             bboxes.append((class_id, 'hellor', int(x_min), int(y_min), int(x_max), int(y_max)))
     return bboxes
@@ -35,9 +35,9 @@ def draw_bboxes(image_path, bbox_path):
     for bbox in bboxes:
 
         ##anchor 확인용
-        # class_id, _, x_min, y_min, x_max, y_max = bbox
+        class_id, _, x_min, y_min, x_max, y_max = bbox
 
-        class_id, x_min, y_min, x_max, y_max = bbox
+        #class_id, x_min, y_min, x_max, y_max = bbox
 
         # 사각형 그리기 (초록색)
         cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 1)
@@ -57,6 +57,6 @@ if __name__ == '__main__':
     bbox_path1 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\yowo_dataset_test\labels\0\p01_20221026_183003_n1_003_03\p01_20221026_183003_n1_003_03_0001.txt'   # 실제 어노테이션 txt 파일 경로
     
     # anchor
-    # bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_1\p01_20221026_183003_n1_003_03_0001.txt'
+    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_1\p01_20221026_183003_n1_003_03_0001.txt'
 
-    draw_bboxes(image_path, bbox_path1)
+    draw_bboxes(image_path, bbox_path2)
