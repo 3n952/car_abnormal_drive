@@ -103,7 +103,7 @@ test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.
 
 loss_module   = RegionLoss(cfg).to(device)
 
-# 임포트 모듈 중 train_traffic, test_traffic 가져오기
+# 임포트 모듈 중 train_traffic, test_traffic 가져오기 opimization.py참조
 train = getattr(sys.modules[__name__], 'train_traffic')
 test  = getattr(sys.modules[__name__], 'test_traffic')
 
