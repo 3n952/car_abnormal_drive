@@ -7,7 +7,7 @@ import math
 import torch.nn as nn
 from torch.autograd import Variable
 from core.utils import *
-from builtins import range as xrange
+#from builtins import range as xrange
 import numpy as np
 from core.FocalLoss import *
 
@@ -39,6 +39,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
         cur_pred_boxes = pred_boxes[b*nAnchors:(b+1)*nAnchors].t()
         # initialize iou score for each anchor
         cur_ious = torch.zeros(nAnchors)
+
         #for t in xrange(50):
             # for each anchor 4 coordinate parameters, already in the coordinate system for the whole image
             # this loop is for anchors in each image
@@ -83,7 +84,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             gw = target[b][t*5+3] * nW
             gh = target[b][t*5+4] * nH
             gt_box = [0, 0, gw, gh]
-            for n in xrange(nA):
+            for n in range(nA):
                 # get anchor parameters (2 values)
                 aw = anchors[anchor_step*n]
                 ah = anchors[anchor_step*n+1]

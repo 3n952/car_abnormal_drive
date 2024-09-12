@@ -89,7 +89,7 @@ def data_augmentation(clip, shape, jitter, hue, saturation, exposure):
 
 # this function works for obtaining new labels after data augumentation
 def fill_truth_detection(labpath, w, h, flip, dx, dy, sx, sy):
-    max_boxes = 50
+    max_boxes = 40
     label = np.zeros((max_boxes,5))
     if os.path.getsize(labpath):
         bs = np.loadtxt(labpath)
@@ -98,11 +98,11 @@ def fill_truth_detection(labpath, w, h, flip, dx, dy, sx, sy):
         bs = np.reshape(bs, (-1, 5))
 
         for i in range(bs.shape[0]):
-            cx = (bs[i][1] + bs[i][3]) / (2 * 320)
-            cy = (bs[i][2] + bs[i][4]) / (2 * 240)
-            imgw = (bs[i][3] - bs[i][1]) / 320
-            imgh = (bs[i][4] - bs[i][2]) / 240
-            bs[i][0] = bs[i][0] - 1
+            cx = (bs[i][1] + bs[i][3]) / (2 * 1280)
+            cy = (bs[i][2] + bs[i][4]) / (2 * 720)
+            imgw = (bs[i][3] - bs[i][1]) / 1280
+            imgh = (bs[i][4] - bs[i][2]) / 720
+            bs[i][0] = bs[i][0] 
             bs[i][1] = cx
             bs[i][2] = cy
             bs[i][3] = imgw
@@ -143,6 +143,7 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
 
     im_split = imgpath.split('/')
     num_parts = len(im_split)
+    # im_ind = 0001 -> 1 반환 같은 꼴
     im_ind = int(im_split[num_parts-1][-8:-5])
     fname = im_split[num_parts-1]
     labpath = os.path.join(base_path, 'labels', im_split[0], im_split[1] ,f'{fname}')
@@ -184,7 +185,7 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
         label = torch.from_numpy(label)
 
     else: # No augmentation
-        label = torch.zeros(50*5)
+        label = torch.zeros(40*5)
         try:
             tmp = torch.from_numpy(read_truths_args(labpath, 8.0/clip[0].width).astype('float32'))
         except Exception:
@@ -193,8 +194,8 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
         tmp = tmp.view(-1)
         tsz = tmp.numel()
 
-        if tsz > 50*5:
-            label = tmp[0:50*5]
+        if tsz > 40*5:
+            label = tmp[0:40*5]
         elif tsz > 0:
             label[0:tsz] = tmp
 

@@ -101,7 +101,7 @@ train_loader  = torch.utils.data.DataLoader(train_dataset, batch_size= cfg.TRAIN
 test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.BATCH_SIZE, shuffle=False,
                                                num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=False, pin_memory=True)
 
-loss_module   = RegionLoss(cfg).cuda()
+loss_module   = RegionLoss(cfg).to(device)
 
 # 임포트 모듈 중 train_traffic, test_traffic 가져오기
 train = getattr(sys.modules[__name__], 'train_traffic')

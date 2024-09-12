@@ -116,6 +116,8 @@ def mk_label_(root_dir, label_dir):
 
                         with open(txt_file, 'w') as f:
                             for j in range(len(bbox_list)):
+                                bbox_list[j][2] = bbox_list[j][0] + bbox_list[j][2]
+                                bbox_list[j][3] = bbox_list[j][1] + bbox_list[j][3]
 
                                 if class_num == 0:
                                     f.write(f'{0} {bbox_list[j][0]} {bbox_list[j][1]} {bbox_list[j][2]} {bbox_list[j][3]}\n')

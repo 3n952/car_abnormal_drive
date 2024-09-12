@@ -18,7 +18,7 @@ class Traffic_Dataset(Dataset):
     # clip duration = 8, i.e, for each time 8 frames are considered together
     def __init__(self, base, root, dataset='traffic', shape=None,
                  transform=None, target_transform=None, 
-                 train=False, clip_duration=16, sampling_rate=1):
+                 train=False, clip_duration=8, sampling_rate=1):
         with open(root, 'r') as file:
             self.lines = file.readlines()
 

@@ -38,7 +38,7 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
 def test_traffic(cfg, epoch, model, test_loader):
 
     def truths_length(truths):
-        for i in range(50):
+        for i in range(40):
             if truths[i][1] == 0:
                 return i
 
@@ -65,7 +65,8 @@ def test_traffic(cfg, epoch, model, test_loader):
     for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
         data = data.to(device)
         with torch.no_grad():
-            output = model(data).data
+            #output = model(data).data
+            output = model(data)
             all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
             for i in range(output.size(0)):
                 boxes = all_boxes[i]
@@ -87,7 +88,7 @@ def test_traffic(cfg, epoch, model, test_loader):
 
                 with open(detection_path, 'w+') as f_detect:
                     for box in boxes:
-                        # 320, 240은 해상도에 맞게 조정
+                        # 1280 w, 720 h은 해상도에 맞게 조정
                         x1 = round(float(box[0]-box[2]/2.0) * 1280.0)
                         y1 = round(float(box[1]-box[3]/2.0) * 720.0)
                         x2 = round(float(box[0]+box[2]/2.0) * 1280.0)
@@ -98,7 +99,7 @@ def test_traffic(cfg, epoch, model, test_loader):
                             cls_conf = float(box[5+2*j].item())
                             prob = det_conf * cls_conf
 
-                            f_detect.write(str(int(box[6]+1)) + ' ' + str(prob) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
+                            f_detect.write(str(int(box[6])) + ' ' + str(prob) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
                 
                 truths = target[i].view(-1, 5)
                 num_gts = truths_length(truths)
