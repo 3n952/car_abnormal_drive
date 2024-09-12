@@ -22,11 +22,12 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         loss.backward()
         steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
         if batch_idx % steps == 0:
+            
             optimizer.step()
             optimizer.zero_grad()
 
         # save result every 1000 batches
-        if batch_idx % 8 == 0: # From time to time, reset averagemeters to see improvements
+        if batch_idx % 1000 == 0: # From time to time, reset averagemeters to see improvements
             loss_module.reset_meters()
 
     t1 = time.time()
