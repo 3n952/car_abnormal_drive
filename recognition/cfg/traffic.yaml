@@ -1,13 +1,13 @@
 TRAIN:
   RESUME_PATH: False
   DATASET: traffic  
-  BATCH_SIZE: 8
+  BATCH_SIZE: 1
   TOTAL_BATCH_SIZE: 998
   LEARNING_RATE: 1e-4
   EVALUATE: False
   FINE_TUNE: False
   BEGIN_EPOCH: 1
-  END_EPOCH: 5
+  END_EPOCH: 1
 SOLVER:
   MOMENTUM: 0.9
   WEIGHT_DECAY: 5e-4
@@ -43,7 +43,7 @@ LISTDATA:
   TRAIN_FILE: "yowo_dataset_test/trainlist.txt"
   TEST_FILE: "yowo_dataset_test/trainlist.txt"
   TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
-  MAX_OBJS: 20
+  MAX_OBJS: 1
   CLASS_NAMES: [
     "정상", "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
     "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
