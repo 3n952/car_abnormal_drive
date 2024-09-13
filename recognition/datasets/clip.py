@@ -93,8 +93,8 @@ def fill_truth_detection(labpath, w, h, flip, dx, dy, sx, sy):
     label = np.zeros((max_boxes,5))
     if os.path.getsize(labpath):
         bs = np.loadtxt(labpath)
-        if bs is None:
-            return label
+        # if bs is None:
+        #     return label
         bs = np.reshape(bs, (-1, 5))
 
         for i in range(bs.shape[0]):
@@ -132,7 +132,7 @@ def fill_truth_detection(labpath, w, h, flip, dx, dy, sx, sy):
                 continue
             label[cc] = bs[i]
             cc += 1
-            if cc >= 50:
+            if cc >= 40:
                 break
 
     label = np.reshape(label, (-1))
@@ -144,9 +144,9 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     im_split = imgpath.split('/')
     num_parts = len(im_split)
     # im_ind = 0001 -> 1 반환 같은 꼴
-    im_ind = int(im_split[num_parts-1][-8:-5])
+    im_ind = int(im_split[num_parts-1][-8:-4])
     fname = im_split[num_parts-1]
-    labpath = os.path.join(base_path, 'labels', im_split[0], im_split[1] ,f'{fname}')
+    labpath = os.path.join(base_path, 'labels', im_split[0], im_split[1] ,f'{fname[:-4]}.txt')
 
     img_folder = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1])
     
@@ -160,22 +160,34 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     ### We change downsampling rate throughout training as a       ###
     ### temporal augmentation, which brings around 1-2 frame       ###
     ### mAP. During test time it is set to cfg.DATA.SAMPLING_RATE. ###
-    d = sampling_rate
-    if train:
-        d = random.randint(1, 2)
 
-    for i in reversed(range(train_dur)):
-        # make it as a loop
-        i_temp = im_ind - i * d
-        if i_temp < 1:
-            i_temp = 1
-        elif i_temp > max_num:
-            i_temp = max_num
+    # d = sampling_rate
 
-        if dataset_use == 'ucf24':
-            path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,'{:4d}.jpg'.format(i_temp))
-        elif dataset_use == 'jhmdb21' or dataset_use == 'traffic':
-            path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-4]}.png'.format(i_temp))
+    # # train시에 d는 1 or 2 sampling / test 시 d=1
+    # if train:
+    #     d = random.randint(1, 2)
+    # # duration = 8
+    # for i in reversed(range(train_dur)):
+    #     # make it as a loop
+    #     i_temp = im_ind - i * d
+    #     if i_temp < 1:
+    #         i_temp = 1
+    #     elif i_temp > max_num:
+    #         i_temp = max_num
+
+    #     if dataset_use == 'ucf24':
+    #         path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,'{:4d}.jpg'.format(i_temp))
+    #     elif dataset_use == 'jhmdb21' or dataset_use == 'traffic':
+    #         path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-4]}.png')
+    
+    for i in range(train_dur):
+        i_temp = im_ind + i
+        if i_temp > max_num:
+            i_temp = max_num - i
+        try:
+            path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-8]}'+'{:04d}.png'.format(i_temp))
+        except:
+            pass
 
         clip.append(Image.open(path_tmp).convert('RGB'))
 
@@ -187,11 +199,12 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     else: # No augmentation
         label = torch.zeros(40*5)
         try:
-            tmp = torch.from_numpy(read_truths_args(labpath, 8.0/clip[0].width).astype('float32'))
+            tmp = torch.from_numpy(read_truths_args(labpath))
         except Exception:
             tmp = torch.zeros(1,5)
-
+        # flatten
         tmp = tmp.view(-1)
+        # count elements
         tsz = tmp.numel()
 
         if tsz > 40*5:

@@ -613,22 +613,22 @@ def read_truths(lab_path):
     else:
         return np.array([])
 
-def read_truths_args(lab_path, min_box_scale):
+def read_truths_args(lab_path):
     truths = read_truths(lab_path)
     new_truths = []
+
+    # bbox regressor 입력을 위해 cx, cy, w, h에 대해 정규화
     for i in range(truths.shape[0]):
-        cx = (truths[i][1] + truths[i][3]) / (2 * 320)
-        cy = (truths[i][2] + truths[i][4]) / (2 * 240)
-        imgw = (truths[i][3] - truths[i][1]) / 320
-        imgh = (truths[i][4] - truths[i][2]) / 240
-        truths[i][0] = truths[i][0] - 1
+        cx = (truths[i][1] + truths[i][3]) / (2 * 1280)
+        cy = (truths[i][2] + truths[i][4]) / (2 * 720)
+        imgw = (truths[i][3] - truths[i][1]) / 1280
+        imgh = (truths[i][4] - truths[i][2]) / 720
+        truths[i][0] = truths[i][0] 
         truths[i][1] = cx
         truths[i][2] = cy
         truths[i][3] = imgw
         truths[i][4] = imgh
         
-        if truths[i][3] < min_box_scale:
-            continue
         new_truths.append([truths[i][0], truths[i][1], truths[i][2], truths[i][3], truths[i][4]])
     return np.array(new_truths)
 

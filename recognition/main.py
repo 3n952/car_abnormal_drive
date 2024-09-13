@@ -16,7 +16,7 @@ from datasets import custom_dataset
 from core.optimization import *
 from cfg import parser
 from core.utils import *
-from core.region_loss import RegionLoss, RegionLoss_Ava
+from core.region_loss import RegionLoss
 from core.model import YOWO, get_fine_tuning_parameters
 
 
@@ -103,7 +103,7 @@ test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.
 
 loss_module   = RegionLoss(cfg).to(device)
 
-# 임포트 모듈 중 train_traffic, test_traffic 가져오기 opimization.py참조
+# 임포트 모듈 중 train_traffic, test_traffic 가져오기 opimization.py참고
 train = getattr(sys.modules[__name__], 'train_traffic')
 test  = getattr(sys.modules[__name__], 'test_traffic')
 

@@ -2,7 +2,7 @@ import os
 import torch
 import time
 from core.utils import *
-from datasets.meters import AVAMeter
+import logging
 
 # 훈련된 모델의 결과를 확인하기 위한 스크립트
 

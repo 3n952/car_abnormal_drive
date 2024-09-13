@@ -80,12 +80,7 @@ def test_traffic(cfg, epoch, model, test_loader):
                     if not os.path.exists(current_dir):
                         os.mkdir(current_dir)
                 else:
-                    detection_path = os.path.join('jhmdb_detections', 'detections_'+str(epoch), frame_idx[i])
-                    current_dir = os.path.join('jhmdb_detections', 'detections_'+str(epoch))
-                    if not os.path.exists('jhmdb_detections'):
-                        os.mkdir('jhmdb_detections')
-                    if not os.path.exists(current_dir):
-                        os.mkdir(current_dir)
+                    print('wrong directory')
 
                 with open(detection_path, 'w+') as f_detect:
                     for box in boxes:
