@@ -289,7 +289,7 @@ class RegionLoss(nn.Module):
         self.l_total.update(loss.data.item(), self.batch)
 
 
-        if batch_idx % 8 == 0: 
+        if batch_idx % 1 == 0: 
             print('Epoch: [%d][%d/%d]:\t nGT %d, recall %d, proposals %d, loss: x %.2f(%.2f), '
                   'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), '
                   'cls %.2f(%.2f), total %.2f(%.2f)'

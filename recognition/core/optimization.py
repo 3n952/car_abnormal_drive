@@ -26,8 +26,8 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
             optimizer.step()
             optimizer.zero_grad()
 
-        # save result every 1000 batches
-        if batch_idx % 1000 == 0: # From time to time, reset averagemeters to see improvements
+        # save result every 30 batches
+        if batch_idx % 998 == 0: # From time to time, reset averagemeters to see improvements
             loss_module.reset_meters()
 
     t1 = time.time()
