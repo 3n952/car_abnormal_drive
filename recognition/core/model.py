@@ -70,6 +70,7 @@ class YOWO(nn.Module):
 
         ##### Attention & Final Conv #####
         self.cfam = CFAMBlock(num_ch_2d+num_ch_3d, 1024)
+        # anchor box * (예측할 클래스 수 + bbox 좌표 4 + confidence score 1)
         self.conv_final = nn.Conv2d(1024, 5*(cfg.MODEL.NUM_CLASSES+4+1), kernel_size=1, bias=False)
 
         self.seen = 0

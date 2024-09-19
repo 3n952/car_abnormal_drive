@@ -80,7 +80,7 @@ class FocalLoss(nn.Module):
 if __name__ == "__main__":
     alpha = torch.rand(21, 1)
     print(alpha)
-    FL = FocalLoss(class_num=5, gamma=0 )
+    FL = FocalLoss(class_num=8, gamma=0 )
     CE = nn.CrossEntropyLoss()
     N = 4
     C = 5

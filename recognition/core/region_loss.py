@@ -36,7 +36,10 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     for b in range(nB):
         # get all anchor boxes in one image
         # (4 * nAnchors)
+
+        #transposed
         cur_pred_boxes = pred_boxes[b*nAnchors:(b+1)*nAnchors].t()
+
         # initialize iou score for each anchor
         cur_ious = torch.zeros(nAnchors)
 
@@ -44,7 +47,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             # for each anchor 4 coordinate parameters, already in the coordinate system for the whole image
             # this loop is for anchors in each image
             # for each anchor 5 parameters are available (class, x, y, w, h)
-        # traffic은 8 batch이므로 8 * 5 = 40
+        
         for t in range(40):
             if target[b][t*5+1] == 0:
                 break
@@ -167,9 +170,12 @@ class RegionLoss(nn.Module):
         # W: width of the image (in grids)
         # for each grid cell, there are A*(4+1+num_classes) parameters
         t0 = time.time()
+
+        # output batch size
         nB = output.data.size(0)
         nA = self.num_anchors
         nC = self.num_classes
+        # output h , w
         nH = output.data.size(2)
         nW = output.data.size(3)
 
