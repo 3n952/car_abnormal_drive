@@ -88,7 +88,7 @@ def data_augmentation(clip, shape, jitter, hue, saturation, exposure):
     return clip, flip, dx, dy, sx, sy 
 
 # this function works for obtaining new labels after data augumentation
-def fill_truth_detection(labpath, w, h, flip, dx, dy, sx, sy):
+def fill_truth_detection(labpath, flip, dx, dy, sx, sy):
     max_boxes = 40
     label = np.zeros((max_boxes,5))
     if os.path.getsize(labpath):
@@ -193,7 +193,7 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
 
     if train: # Apply augmentation
         clip,flip,dx,dy,sx,sy = data_augmentation(clip, shape, jitter, hue, saturation, exposure)
-        label = fill_truth_detection(labpath, clip[0].width, clip[0].height, flip, dx, dy, 1./sx, 1./sy)
+        label = fill_truth_detection(labpath, flip, dx, dy, 1./sx, 1./sy)
         label = torch.from_numpy(label)
 
     else: # No augmentation
