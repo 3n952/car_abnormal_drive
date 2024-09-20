@@ -26,13 +26,15 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
             optimizer.step()
             optimizer.zero_grad()
 
-        # save result every 30 batches
+        # save result every 998 batches
         if batch_idx % 998 == 0: # From time to time, reset averagemeters to see improvements
             loss_module.reset_meters()
 
     t1 = time.time()
     logging('trained with %f samples/s' % (len(train_loader.dataset)/(t1-t0)))
     print('')
+    
+    return loss
 
 
 @torch.no_grad()
@@ -40,6 +42,7 @@ def test_traffic(cfg, epoch, model, test_loader):
 
     def truths_length(truths):
         for i in range(40):
+            # zero 초기화 했기 때문에, 0인 값이 탐색시 해당 인덱스전까지가 정답이 라벨링된 값이다. ex 3개가 라벨링 되어있다면, 3 인덱스에서 0이 발견됨.
             if truths[i][1] == 0:
                 return i
 
@@ -50,7 +53,7 @@ def test_traffic(cfg, epoch, model, test_loader):
     num_classes = cfg.MODEL.NUM_CLASSES
     anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
     num_anchors = cfg.SOLVER.NUM_ANCHORS
-    conf_thresh_valid = 0.005
+    conf_thresh_valid = 0.05
     total       = 0.0
     proposals   = 0.0
     correct     = 0.0
@@ -103,6 +106,7 @@ def test_traffic(cfg, epoch, model, test_loader):
                 total = total + num_gts
                 pred_list = [] # LIST OF CONFIDENT BOX INDICES
                 for i in range(len(boxes)):
+                    # det conf > 0.25
                     if boxes[i][4] > 0.25:
                         proposals = proposals+1
                         pred_list.append(i)
@@ -113,6 +117,7 @@ def test_traffic(cfg, epoch, model, test_loader):
                     best_j = -1
                     for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
                         iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
+                        #iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=True)
                         if iou > best_iou:
                             best_j = j
                             best_iou = iou
@@ -131,9 +136,9 @@ def test_traffic(cfg, epoch, model, test_loader):
             logging("[%d/%d] precision: %f, recall: %f, fscore: %f" % (batch_idx, nbatch, precision, recall, fscore))
 
     classification_accuracy = 1.0 * correct_classification / (total_detected + eps)
-    locolization_recall = 1.0 * total_detected / (total + eps)
+    localization_recall = 1.0 * total_detected / (total + eps)
 
     print("Classification accuracy: %.3f" % classification_accuracy)
-    print("Locolization recall: %.3f" % locolization_recall)
+    print("Localization recall: %.3f" % localization_recall)
 
     return fscore

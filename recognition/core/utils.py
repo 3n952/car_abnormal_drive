@@ -31,11 +31,21 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def save_checkpoint(state, is_best, directory, dataset, clip_duration):
-    torch.save(state, '%s/%s_checkpoint.pth' % (directory, 'yowo_' + dataset + '_' + str(clip_duration) + 'f'))
+def save_checkpoint(state, is_best, epoch, end_epoch, directory, dataset, clip_duration):
+    torch.save(state, '%s/%s_checkpoint.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'))
+    #torch.save(state, '%s/%s_checkpoint.pth' % (directory, str(epoch)+'epochs'))
     if is_best:
-        shutil.copyfile('%s/%s_checkpoint.pth' % (directory, 'yowo_' + dataset + '_' + str(clip_duration) + 'f'),
+        shutil.copyfile('%s/%s_checkpoint.pth' % (directory, 'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'),
                         '%s/%s_best.pth' % (directory, 'yowo_' + dataset + '_' + str(clip_duration) + 'f'))
+        # shutil.copyfile('%s/%s_checkpoint.pth' % (directory, str(epoch)+'epochs'),
+        #                 '%s/%s_best.pth' % (directory, 'yowo_' + dataset))
+
+# traing log 보기 위함 -> last, best pth만 저장하고. last에 모든 loss, score가 담기게 한다.
+def save_checkpoint2(state, is_best, epoch, end_epoch, directory, dataset, clip_duration):
+    if is_best:
+        torch.save(state, '%s/%s_best.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'))
+    if epoch == end_epoch:
+        torch.save(state, '%s/%s_last.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'))
 
 
 
@@ -264,6 +274,8 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
         output = output.unsqueeze(0)
     batch = output.size(0)
     assert(output.size(1) == (5+num_classes)*num_anchors)
+
+    # grid cell w / h
     h = output.size(2)
     w = output.size(3)
 
@@ -294,9 +306,10 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     det_confs = torch.sigmoid(output[4])
 
 
-    #cls_confs = torch.nn.Softmax(dim=1)(output[5:5+num_classes].transpose(0,1))
+    #cls_confs = torch.nn.Softmax()(output[5:5+num_classes].transpose(0,1))
     cls_confs = torch.nn.Softmax(dim=1)(output[5:5+num_classes].transpose(0,1))
     
+    # dim=1 축으로 가장 큰 값 추출
     cls_max_confs, cls_max_ids = torch.max(cls_confs, 1)
     cls_max_confs = cls_max_confs.view(-1)
     cls_max_ids = cls_max_ids.view(-1)
@@ -319,6 +332,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
         for cy in range(h):
             for cx in range(w):
                 for i in range(num_anchors):
+                    # 각 anchor box에 대한 index
                     ind = b*sz_hwa + i*sz_hw + cy*w + cx
                     det_conf =  det_confs[ind]
                     if only_objectness:
@@ -333,6 +347,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
                         bh = hs[ind]
                         cls_max_conf = cls_max_confs[ind]
                         cls_max_id = cls_max_ids[ind]
+                        # box 내 7개의 값을 삽입
                         box = [bcx/w, bcy/h, bw/w, bh/h, det_conf, cls_max_conf, cls_max_id]
                         if (not only_objectness) and validation:
                             for c in range(num_classes):

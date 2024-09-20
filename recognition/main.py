@@ -31,6 +31,11 @@ cfg   = parser.load_config(args)
 if not os.path.exists(cfg.BACKUP_DIR):
     os.makedirs(cfg.BACKUP_DIR)
 
+# train 학습 모니터링을 위한 log 세분화
+# backup_dir = os.path.join(cfg.BACKUP_DIR, str(cfg.DATA.NUM_FRAMES)+'f_'+str(cfg.TRAIN.END_EPOCH))
+# if not os.path.exists(backup_dir):
+#     os.makedirs(backup_dir)
+
 
 ####### Create model
 # ---------------------------------------------------------------
@@ -114,15 +119,19 @@ if cfg.TRAIN.EVALUATE:
     logging('evaluating ...')
     test(cfg, 0, model, test_loader)
 else:
+    loss_list = []
+    score_list = []
     for epoch in range(cfg.TRAIN.BEGIN_EPOCH, cfg.TRAIN.END_EPOCH + 1):
         # Adjust learning rate
         lr_new = adjust_learning_rate(optimizer, epoch, cfg)
         
         # Train and test model
         logging('training at epoch %d, lr %f' % (epoch, lr_new))
-        train(cfg, epoch, model, train_loader, loss_module, optimizer)
+        # loss = train(cfg, epoch, model, train_loader, loss_module, optimizer)
+        # loss_list.append(loss)
         logging('testing at epoch %d' % (epoch))
         score = test(cfg, epoch, model, test_loader)
+        score_list.append(score)
 
         # Save the model to backup directory
         is_best = score > best_score
@@ -135,7 +144,11 @@ else:
             'epoch': epoch,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'score': score
+            'score': score_list,
+            'loss': loss_list
             }
-        save_checkpoint(state, is_best, cfg.BACKUP_DIR, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
+
+        save_checkpoint2(state, is_best, epoch,cfg.TRAIN.END_EPOCH, cfg.BACKUP_DIR, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
+        #save_checkpoint(state, is_best, epoch, backup_dir, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
+        #save_checkpoint(state, is_best, epoch,cfg.TRAIN.END_EPOCH, cfg.BACKUP_DIR, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
         logging('Weights are saved to backup directory: %s' % (cfg.BACKUP_DIR))
