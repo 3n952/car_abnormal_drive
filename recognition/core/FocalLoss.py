@@ -30,6 +30,7 @@ class FocalLoss(nn.Module):
     """
     def __init__(self, class_num, alpha=None, gamma=2, size_average=True):
         super(FocalLoss, self).__init__()
+        # 동일 가중치 부여
         if alpha is None:
             self.alpha = Variable(torch.ones(class_num, 1))
         else:

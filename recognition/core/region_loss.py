@@ -39,6 +39,8 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
 
         #transposed
         cur_pred_boxes = pred_boxes[b*nAnchors:(b+1)*nAnchors].t()
+        #cur_pre_boxes shape is (245,4) if not use .t() 
+        #cur_pred_boxes = pred_boxes[b*nAnchors:(b+1)*nAnchors]
 
         # initialize iou score for each anchor
         cur_ious = torch.zeros(nAnchors)
@@ -49,6 +51,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             # for each anchor 5 parameters are available (class, x, y, w, h)
         
         for t in range(40):
+            # 실제로 라벨링 되어 있지 않은 값 예외처리
             if target[b][t*5+1] == 0:
                 break
             gx = target[b][t*5+1]*nW
@@ -57,10 +60,14 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             gh = target[b][t*5+4]*nH
             # groud truth boxes
             cur_gt_boxes = torch.FloatTensor([gx,gy,gw,gh]).repeat(nAnchors,1).t()
-            # bbox_ious is the iou value between orediction and groud truth
+            #cur_gt_boxes = torch.FloatTensor([gx,gy,gw,gh]).repeat(nAnchors,1)
+
+            # bbox_ious is the iou value between prediction and groud truth
             cur_ious = torch.max(cur_ious, bbox_ious(cur_pred_boxes, cur_gt_boxes, x1y1x2y2=False))
+
         # if iou > a given threshold, it is seen as it includes an object
         # conf_mask[b][cur_ious>sil_thresh] = 0
+        #sil_thresh = 0.60
         conf_mask_t = conf_mask.view(nB, -1)
         conf_mask_t[b][cur_ious>sil_thresh] = 0
         conf_mask_tt = conf_mask_t[b].view(nA, nH, nW)
@@ -181,6 +188,7 @@ class RegionLoss(nn.Module):
 
         # resize the output (all parameters for each anchor can be reached)
         output   = output.view(nB, nA, (5+nC), nH, nW)
+
         # anchor's parameter tx
         # gpu mode => x    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([0])).view(nB, nA, nH, nW))
         x    = torch.sigmoid(output.index_select(2, torch.LongTensor([0])).view(nB, nA, nH, nW))
@@ -192,8 +200,10 @@ class RegionLoss(nn.Module):
         h    = output.index_select(2, torch.LongTensor([3])).view(nB, nA, nH, nW)
         # confidence score for each anchor
         conf = torch.sigmoid(output.index_select(2, torch.LongTensor([4])).view(nB, nA, nH, nW))
+
         # anchor's parameter class label
         #cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
+        #ouput 3번째 차원(13개)의 5 ~ 11 인덱스에 접근
         cls  = output.index_select(2, torch.linspace(5,5+nC-1,nC).long())
         
         # resize the data structure so that for every anchor there is a class label in the last dimension
@@ -238,8 +248,10 @@ class RegionLoss(nn.Module):
         pred_boxes = convert2cpu(pred_boxes.transpose(0,1).contiguous().view(-1,4))
         t2 = time.time()
 
-        nGT, nCorrect, coord_mask, conf_mask, cls_mask, tx, ty, tw, th, tconf, tcls = build_targets(pred_boxes, target.data, self.anchors, nA, nC, \
+        nGT, nCorrect, coord_mask, conf_mask, cls_mask, tx, ty, tw, th, tconf, tcls = build_targets(pred_boxes, target.detach(), self.anchors, nA, nC, \
                                                                nH, nW, self.noobject_scale, self.object_scale, self.thresh)
+        
+        # 이진 마스크 적용 tensor 값 중 1인 원소를 TRUE로 반환 아닐 시 False
         cls_mask = (cls_mask == 1)
         #  keep those with high box confidence scores (greater than 0.25) as our final predictions
         nProposals = int((conf > 0.25).sum().data.item())
@@ -280,13 +292,20 @@ class RegionLoss(nn.Module):
         #print(loss)
         t4 = time.time()
 
-        self.l_x.update(loss_x.data.item(), self.batch)
-        self.l_y.update(loss_y.data.item(), self.batch)
-        self.l_w.update(loss_w.data.item(), self.batch)
-        self.l_h.update(loss_h.data.item(), self.batch)
-        self.l_conf.update(loss_conf.data.item(), self.batch)
-        self.l_cls.update(loss_cls.data.item(), self.batch)
-        self.l_total.update(loss.data.item(), self.batch)
+        # self.l_x.update(loss_x.data.item(), self.batch)
+        # self.l_y.update(loss_y.data.item(), self.batch)
+        # self.l_w.update(loss_w.data.item(), self.batch)
+        # self.l_h.update(loss_h.data.item(), self.batch)
+        # self.l_conf.update(loss_conf.data.item(), self.batch)
+        # self.l_cls.update(loss_cls.data.item(), self.batch)
+        # self.l_total.update(loss.data.item(), self.batch)
+        self.l_x.update(loss_x.detach().item(), self.batch)
+        self.l_y.update(loss_y.detach().item(), self.batch)
+        self.l_w.update(loss_w.detach().item(), self.batch)
+        self.l_h.update(loss_h.detach().item(), self.batch)
+        self.l_conf.update(loss_conf.detach().item(), self.batch)
+        self.l_cls.update(loss_cls.detach().item(), self.batch)
+        self.l_total.update(loss.detach().item(), self.batch)
 
 
         if batch_idx % 1 == 0: 

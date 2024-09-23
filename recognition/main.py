@@ -127,8 +127,8 @@ else:
         
         # Train and test model
         logging('training at epoch %d, lr %f' % (epoch, lr_new))
-        # loss = train(cfg, epoch, model, train_loader, loss_module, optimizer)
-        # loss_list.append(loss)
+        loss = train(cfg, epoch, model, train_loader, loss_module, optimizer)
+        loss_list.append(loss)
         logging('testing at epoch %d' % (epoch))
         score = test(cfg, epoch, model, test_loader)
         score_list.append(score)

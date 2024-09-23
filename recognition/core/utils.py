@@ -156,6 +156,7 @@ def bbox_ious(boxes1, boxes2, x1y1x2y2=True):
     uh = My - my
     cw = w1 + w2 - uw
     ch = h1 + h2 - uh
+    # 겹치는 영역이 없는 경우 마스킹
     mask = ((cw <= 0) + (ch <= 0) > 0)
     area1 = w1 * h1
     area2 = w2 * h2
@@ -163,6 +164,7 @@ def bbox_ious(boxes1, boxes2, x1y1x2y2=True):
     carea[mask] = 0
     uarea = area1 + area2 - carea
     return carea/uarea
+
 
 def nms(boxes, nms_thresh):
     if len(boxes) == 0:
