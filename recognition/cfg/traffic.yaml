@@ -1,6 +1,6 @@
 TRAIN:
   RESUME_PATH: False # -> cfg.default에서 수정
-  #RESUME_PATH: '/Users/QBIC/Desktop/workspace/car_abnormal_driving/recognition/backup/traffic/yowo_traffic_8f_10epochs_checkpoint.pth'
+  #RESUME_PATH: '/Users/QBIC/Desktop/workspace/car_abnormal_driving/recognition/backup/traffic/second_test/yowo_traffic_8f30epochs_last.pth'
   DATASET: traffic  
   BATCH_SIZE: 1
   TOTAL_BATCH_SIZE: 998
@@ -8,14 +8,13 @@ TRAIN:
   EVALUATE: False
   FINE_TUNE: False
   BEGIN_EPOCH: 1
-  END_EPOCH: 3
+  END_EPOCH: 50
 SOLVER:
   MOMENTUM: 0.9
   WEIGHT_DECAY: 5e-4
   STEPS: [2, 3, 4, 5]
   LR_DECAY_RATE: 0.5
-  #ANCHORS: [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979]
-  ANCHORS: [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
+  ANCHORS: [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979]
   NUM_ANCHORS: 5
   OBJECT_SCALE: 5
   NOOBJECT_SCALE: 1
