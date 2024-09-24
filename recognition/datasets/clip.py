@@ -93,11 +93,16 @@ def fill_truth_detection(labpath, flip, dx, dy, sx, sy):
     label = np.zeros((max_boxes,5))
     if os.path.getsize(labpath):
         bs = np.loadtxt(labpath)
-        # if bs is None:
-        #     return label
+
+        # loader에서 0인경우 처리 x 로직이 있음
+        if bs is None:
+            return label
+        
         bs = np.reshape(bs, (-1, 5))
 
+        # 정답값에 대한 각 class-box coord 접근
         for i in range(bs.shape[0]):
+            # xcenter, ycenter, w, h 값으로 정규화
             cx = (bs[i][1] + bs[i][3]) / (2 * 1280)
             cy = (bs[i][2] + bs[i][4]) / (2 * 720)
             imgw = (bs[i][3] - bs[i][1]) / 1280
@@ -136,6 +141,7 @@ def fill_truth_detection(labpath, flip, dx, dy, sx, sy):
                 break
 
     label = np.reshape(label, (-1))
+    # label shape = (200,)
     return label
 
 def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, shape, dataset_use='traffic', jitter=0.2, hue=0.1, saturation=1.5, exposure=1.5):
@@ -150,7 +156,7 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
 
     img_folder = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1])
     
-    if dataset_use == 'ucf24' or dataset_use == 'traffic':
+    if dataset_use == 'traffic':
         max_num = len(os.listdir(img_folder))
     elif dataset_use == 'jhmdb21':
         max_num = len(os.listdir(img_folder)) - 1
@@ -161,12 +167,13 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     ### temporal augmentation, which brings around 1-2 frame       ###
     ### mAP. During test time it is set to cfg.DATA.SAMPLING_RATE. ###
 
-    # d = sampling_rate
+    d = sampling_rate
 
     # # train시에 d는 1 or 2 sampling / test 시 d=1
-    # if train:
-    #     d = random.randint(1, 2)
-    # # duration = 8
+    if train:
+        d = random.randint(1, 2)
+        
+    # duration = 8
     # for i in reversed(range(train_dur)):
     #     # make it as a loop
     #     i_temp = im_ind - i * d
@@ -175,10 +182,10 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     #     elif i_temp > max_num:
     #         i_temp = max_num
 
-    #     if dataset_use == 'ucf24':
-    #         path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,'{:4d}.jpg'.format(i_temp))
-    #     elif dataset_use == 'jhmdb21' or dataset_use == 'traffic':
-    #         path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-4]}.png')
+    #     if dataset_use == 'traffic':
+    #         path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-8]}'+'{:04d}.png'.format(i_temp))
+    #     else:
+    #         print('wrong dataset use(make new dataset loader)')
     
     for i in range(train_dur):
         i_temp = im_ind + i
@@ -191,26 +198,45 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
 
         clip.append(Image.open(path_tmp).convert('RGB'))
 
-    if train: # Apply augmentation
-        clip,flip,dx,dy,sx,sy = data_augmentation(clip, shape, jitter, hue, saturation, exposure)
-        label = fill_truth_detection(labpath, flip, dx, dy, 1./sx, 1./sy)
-        label = torch.from_numpy(label)
+    # augmetation snippet-----
+    # if train: # Apply augmentation
+    #     clip,flip,dx,dy,sx,sy = data_augmentation(clip, shape, jitter, hue, saturation, exposure)
+    #     label = fill_truth_detection(labpath, flip, dx, dy, 1./sx, 1./sy)
+    #     label = torch.from_numpy(label)
 
-    else: # No augmentation
-        label = torch.zeros(40*5)
-        try:
-            tmp = torch.from_numpy(read_truths_args(labpath))
-        except Exception:
-            tmp = torch.zeros(1,5)
-        # flatten
-        tmp = tmp.view(-1)
-        # count elements
-        tsz = tmp.numel()
+    # else: # No augmentation
+    #     label = torch.zeros(40*5)
+    #     try:
+    #         tmp = torch.from_numpy(read_truths_args(labpath))
+    #     except Exception:
+    #         tmp = torch.zeros(1,5)
+    #     # flatten
+    #     tmp = tmp.view(-1)
+    #     # count elements
+    #     tsz = tmp.numel()
 
-        if tsz > 40*5:
-            label = tmp[0:40*5]
-        elif tsz > 0:
-            label[0:tsz] = tmp
+    #     if tsz > 40*5:
+    #         label = tmp[0:40*5]
+    #     elif tsz > 0:
+    #         label[0:tsz] = tmp
+    #----------------------
+
+    # no augmentation----------------
+    label = torch.zeros(40*5)
+    try:
+        tmp = torch.from_numpy(read_truths_args(labpath))
+    except Exception:
+        tmp = torch.zeros(1,5)
+    # flatten
+    tmp = tmp.view(-1)
+    # count elements
+    tsz = tmp.numel()
+
+    if tsz > 40*5:
+        label = tmp[0:40*5]
+    elif tsz > 0:
+        label[0:tsz] = tmp
+    # ------------------------------------
 
     if train:
         return clip, label

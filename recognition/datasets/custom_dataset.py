@@ -46,6 +46,9 @@ class Traffic_Dataset(Dataset):
             exposure = 1.5
 
             clip, label = load_data_detection(self.base_path, imgpath,  self.train, self.clip_duration, self.sampling_rate, self.shape, self.dataset, jitter, hue, saturation, exposure)
+            
+            # clip 모듈 augmentation 사용 안하는 경우 crop 적용
+            clip = [img.resize(self.shape) for img in clip]
 
         else: # For Testing
             frame_idx, clip, label = load_data_detection(self.base_path, imgpath, False, self.clip_duration, self.sampling_rate, self.shape, self.dataset)
