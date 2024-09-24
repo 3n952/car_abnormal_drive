@@ -58,6 +58,7 @@ class YOWO(nn.Module):
         else:
             raise ValueError("Wrong backbone_3d model is requested. Please select it from [resnext101, resnet101, \
                              resnet50, resnet18, mobilenet_2x, mobilenetv2_1x, shufflenet_2x, shufflenetv2_2x]")
+        
         if cfg.WEIGHTS.BACKBONE_3D:# load pretrained weights on Kinetics-600 dataset
             self.backbone_3d = self.backbone_3d.to(device)
             self.backbone_3d = nn.DataParallel(self.backbone_3d, device_ids=None) # Because the pretrained backbone models are saved in Dataparalled mode

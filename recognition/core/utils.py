@@ -13,6 +13,7 @@ import imghdr # get_image_size
 
 
 class AverageMeter(object):
+
     """Computes and stores the average and current value"""
 
     def __init__(self):
@@ -43,9 +44,9 @@ def save_checkpoint(state, is_best, epoch, end_epoch, directory, dataset, clip_d
 # traing log 보기 위함 -> last, best pth만 저장하고. last에 모든 loss, score가 담기게 한다.
 def save_checkpoint2(state, is_best, epoch, end_epoch, directory, dataset, clip_duration):
     if is_best:
-        torch.save(state, '%s/%s_best.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'))
+        torch.save(state, '%s/%s_best.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f_' + str(epoch)+'epochs'))
     if epoch == end_epoch:
-        torch.save(state, '%s/%s_last.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'))
+        torch.save(state, '%s/%s_last.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f_' + str(epoch)+'epochs'))
 
 
 
@@ -95,7 +96,9 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
 
     area1 = w1 * h1
     area2 = w2 * h2
+    # 겹치는 부분 영역
     carea = cw * ch
+    # 전체 영역
     uarea = area1 + area2 - carea
     return carea/uarea
 
@@ -152,16 +155,19 @@ def bbox_ious(boxes1, boxes2, x1y1x2y2=True):
         h1 = boxes1[3]
         w2 = boxes2[2]
         h2 = boxes2[3]
+
     uw = Mx - mx
     uh = My - my
     cw = w1 + w2 - uw
     ch = h1 + h2 - uh
-    # 겹치는 영역이 없는 경우 마스킹
+
+    # 두 박스가 겹치는 영역이 없는 경우 마스킹 (or 연산)
     mask = ((cw <= 0) + (ch <= 0) > 0)
     area1 = w1 * h1
     area2 = w2 * h2
     carea = cw * ch
     carea[mask] = 0
+    
     uarea = area1 + area2 - carea
     return carea/uarea
 
@@ -185,6 +191,7 @@ def nms(boxes, nms_thresh):
                 if bbox_iou(box_i, box_j, x1y1x2y2=False) > nms_thresh:
                     #print(box_i, box_j, bbox_iou(box_i, box_j, x1y1x2y2=False))
                     box_j[4] = 0
+                    
     return out_boxes
 
 
@@ -263,14 +270,23 @@ def voc_ap(pr, use_07_metric=False):
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
 
-
+# gpu train
 def convert2cpu(gpu_matrix):
     return torch.FloatTensor(gpu_matrix.size()).copy_(gpu_matrix)
 
 def convert2cpu_long(gpu_matrix):
     return torch.LongTensor(gpu_matrix.size()).copy_(gpu_matrix)
 
+# cpu train
+def convert(matrix):
+    return torch.FloatTensor(matrix.size()).copy_(matrix)
+
+def convert2long(matrix):
+    return torch.LongTensor(matrix.size()).copy_(matrix)
+
+
 def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, only_objectness=1, validation=False):
+
     anchor_step = len(anchors)//num_anchors
     if output.dim() == 3:
         output = output.unsqueeze(0)
@@ -316,18 +332,29 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     cls_max_confs = cls_max_confs.view(-1)
     cls_max_ids = cls_max_ids.view(-1)
     t1 = time.time()
-    
     sz_hw = h*w
     sz_hwa = sz_hw*num_anchors
-    det_confs = convert2cpu(det_confs)
-    cls_max_confs = convert2cpu(cls_max_confs)
-    cls_max_ids = convert2cpu_long(cls_max_ids)
-    xs = convert2cpu(xs)
-    ys = convert2cpu(ys)
-    ws = convert2cpu(ws)
-    hs = convert2cpu(hs)
+
+    # det_confs = convert2cpu(det_confs)
+    # cls_max_confs = convert2cpu(cls_max_confs)
+    # cls_max_ids = convert2cpu_long(cls_max_ids)
+    # xs = convert2cpu(xs)
+    # ys = convert2cpu(ys)
+    # ws = convert2cpu(ws)
+    # hs = convert2cpu(hs)
+
+    # det_confs = convert(det_confs)
+    # cls_max_confs = convert(cls_max_confs)
+    # cls_max_ids = convert2long(cls_max_ids)
+    # xs = convert(xs)
+    # ys = convert(ys)
+    # ws = convert(ws)
+    # hs = convert(hs)
+
     if validation:
-        cls_confs = convert2cpu(cls_confs.view(-1, num_classes))
+        #cls_confs = convert2cpu(cls_confs.view(-1, num_classes))
+        cls_confs = cls_confs.view(-1, num_classes)
+
     t2 = time.time()
     for b in range(batch):
         boxes = []
@@ -349,6 +376,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
                         bh = hs[ind]
                         cls_max_conf = cls_max_confs[ind]
                         cls_max_id = cls_max_ids[ind]
+
                         # box 내 7개의 값을 삽입
                         box = [bcx/w, bcy/h, bw/w, bh/h, det_conf, cls_max_conf, cls_max_id]
                         if (not only_objectness) and validation:

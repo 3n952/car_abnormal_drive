@@ -18,7 +18,11 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     nA = num_anchors    # 5 for our case
     nC = num_classes
     anchor_step = len(anchors)//num_anchors
+
+    # noobject_scale -> default 1
+    # 객체 없는 경우
     conf_mask  = torch.ones(nB, nA, nH, nW) * noobject_scale
+
     coord_mask = torch.zeros(nB, nA, nH, nW)
     cls_mask   = torch.zeros(nB, nA, nH, nW)
     tx         = torch.zeros(nB, nA, nH, nW) 
@@ -32,15 +36,15 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     # nAnchors is the number of anchor for one image
     nAnchors = nA*nH*nW
     nPixels  = nH*nW
+
     # for each image
     for b in range(nB):
         # get all anchor boxes in one image
         # (4 * nAnchors)
 
-        #transposed
+        # transposed
+        # cur_pre_boxes shape is (4,245) if use .t()
         cur_pred_boxes = pred_boxes[b*nAnchors:(b+1)*nAnchors].t()
-        #cur_pre_boxes shape is (245,4) if not use .t() 
-        #cur_pred_boxes = pred_boxes[b*nAnchors:(b+1)*nAnchors]
 
         # initialize iou score for each anchor
         cur_ious = torch.zeros(nAnchors)
@@ -49,7 +53,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             # for each anchor 4 coordinate parameters, already in the coordinate system for the whole image
             # this loop is for anchors in each image
             # for each anchor 5 parameters are available (class, x, y, w, h)
-        
+
         for t in range(40):
             # 실제로 라벨링 되어 있지 않은 값 예외처리
             if target[b][t*5+1] == 0:
@@ -58,17 +62,20 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             gy = target[b][t*5+2]*nH
             gw = target[b][t*5+3]*nW
             gh = target[b][t*5+4]*nH
+
             # groud truth boxes
+            # (4, 245) if use .t()
             cur_gt_boxes = torch.FloatTensor([gx,gy,gw,gh]).repeat(nAnchors,1).t()
-            #cur_gt_boxes = torch.FloatTensor([gx,gy,gw,gh]).repeat(nAnchors,1)
 
             # bbox_ious is the iou value between prediction and groud truth
+            # bbox_ious 반환 shape = (1,245)
             cur_ious = torch.max(cur_ious, bbox_ious(cur_pred_boxes, cur_gt_boxes, x1y1x2y2=False))
 
         # if iou > a given threshold, it is seen as it includes an object
-        # conf_mask[b][cur_ious>sil_thresh] = 0
-        #sil_thresh = 0.60
+        # sil_thresh = 0.60
+        # conf_mask_t shape = (1, 245)
         conf_mask_t = conf_mask.view(nB, -1)
+        # 예측한 위치에 객체가 있다고 판단하는 경우 0을 할당
         conf_mask_t[b][cur_ious>sil_thresh] = 0
         conf_mask_tt = conf_mask_t[b].view(nA, nH, nW)
         conf_mask[b] = conf_mask_tt
@@ -79,52 +86,68 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     for b in range(nB):
         # anchors for one batch (at least batch size, and for some specific classes, there might exist more than one anchor)
         for t in range(40):
+            # 객체 없는 경우 break
             if target[b][t*5+1] == 0:
                 break
+
             nGT = nGT + 1
             best_iou = 0.0
             best_n = -1
-            min_dist = 10000
+            # min_dist = 10000
             # the values saved in target is ratios
             # times by the width and height of the output feature maps nW and nH
             gx = target[b][t*5+1] * nW
             gy = target[b][t*5+2] * nH
+            
+            # grid idx 파악을 위한 gi, gj
             gi = int(gx)
             gj = int(gy)
+
             gw = target[b][t*5+3] * nW
             gh = target[b][t*5+4] * nH
             gt_box = [0, 0, gw, gh]
             for n in range(nA):
-                # get anchor parameters (2 values)
+                # get anchor parameters (2 values) anchor step = 2
                 aw = anchors[anchor_step*n]
                 ah = anchors[anchor_step*n+1]
                 anchor_box = [0, 0, aw, ah]
                 # only consider the size (width and height) of the anchor box
+                # cfg 설정된 anchor와 정답 bbox의 iou를 비교
                 iou  = bbox_iou(anchor_box, gt_box, x1y1x2y2=False)
                 # get the best anchor form with the highest iou
                 if iou > best_iou:
                     best_iou = iou
                     best_n = n
+            # ㄴ>정답 bbox와 grid별 anchor의 iou값을 계산해서 가장 높은 값을 파악한 결과.
 
 
             # then we determine the parameters for an anchor (4 values together)
             gt_box = [gx, gy, gw, gh]
             # find corresponding prediction box
+            # pred boxes has (nB*nA*nH*nW, 4) shape tensor
+            # 예측한 box중 가장 높은 iou를 가진 값 좌표 추출
             pred_box = pred_boxes[b*nAnchors+best_n*nPixels+gj*nW+gi]
 
             # only consider the best anchor box, for each image
+            # 예측 box grid 좌표 mask에 1 할당
             coord_mask[b][best_n][gj][gi] = 1
             cls_mask[b][best_n][gj][gi] = 1
+
             # in this cell of the output feature map, there exists an object
+            # object scale -> 5
             conf_mask[b][best_n][gj][gi] = object_scale
+            
+            # 중심으로 부터 x, y 좌표 거리
             tx[b][best_n][gj][gi] = target[b][t*5+1] * nW - gi
             ty[b][best_n][gj][gi] = target[b][t*5+2] * nH - gj
             tw[b][best_n][gj][gi] = math.log(gw/anchors[anchor_step*best_n])
             th[b][best_n][gj][gi] = math.log(gh/anchors[anchor_step*best_n+1])
             iou = bbox_iou(gt_box, pred_box, x1y1x2y2=False) # best_iou
+
             # confidence equals to iou of the corresponding anchor
             tconf[b][best_n][gj][gi] = iou
             tcls[b][best_n][gj][gi] = target[b][t*5]
+
             # if ious larger than 0.5, we justify it as a correct prediction
             if iou > 0.5:
                 nCorrect = nCorrect + 1
@@ -148,6 +171,8 @@ class RegionLoss(nn.Module):
         self.coord_scale    = cfg.SOLVER.COORD_SCALE
         self.focalloss      = FocalLoss(class_num=self.num_classes, gamma=2, size_average=False)
         self.thresh = 0.6
+
+        # value, count, sum을 이용하여 average를 구함 -> 각 배치의 평균 loss 계산
         self.l_x = AverageMeter()
         self.l_y = AverageMeter()
         self.l_w = AverageMeter()
@@ -212,9 +237,11 @@ class RegionLoss(nn.Module):
 
         # for the prediction of localization of each bounding box, there exist 4 parameters (tx, ty, tw, th)
         pred_boxes = torch.FloatTensor(4, nB*nA*nH*nW)
+
         # tx and ty
         # grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
         # grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+        # 각 그리드 시작점 좌표
         grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
         grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
 
@@ -230,30 +257,40 @@ class RegionLoss(nn.Module):
         # for each pixel (grid) repeat the above process (obtain width and height of each grid)
         anchor_w = anchor_w.repeat(nB, 1).repeat(1, 1, nH*nW).view(nB*nA*nH*nW)
         anchor_h = anchor_h.repeat(nB, 1).repeat(1, 1, nH*nW).view(nB*nA*nH*nW)
+
         # prediction of bounding box localization
         # x.data and y.data: top left corner of the anchor
         # grid_x, grid_y: tx and ty predictions made by yowo
-
         x_data = x.data.view(-1)
         y_data = y.data.view(-1)
         w_data = w.data.view(-1)
         h_data = h.data.view(-1)
+        # x_data = x.view(-1)
+        # y_data = y.view(-1)
+        # w_data = w.view(-1)
+        # h_data = h.view(-1)
 
         pred_boxes[0] = x_data + grid_x    # bx
         pred_boxes[1] = y_data + grid_y    # by
         pred_boxes[2] = torch.exp(w_data) * anchor_w    # bw
         pred_boxes[3] = torch.exp(h_data) * anchor_h    # bh
         # the size -1 is inferred from other dimensions
+
         # pred_boxes (nB*nA*nH*nW, 4)
-        pred_boxes = convert2cpu(pred_boxes.transpose(0,1).contiguous().view(-1,4))
+        # pred_boxes = convert2cpu(pred_boxes.transpose(0,1).contiguous().view(-1,4))
+        pred_boxes = convert(pred_boxes.transpose(0,1).contiguous().view(-1,4))
         t2 = time.time()
 
-        nGT, nCorrect, coord_mask, conf_mask, cls_mask, tx, ty, tw, th, tconf, tcls = build_targets(pred_boxes, target.detach(), self.anchors, nA, nC, \
-                                                               nH, nW, self.noobject_scale, self.object_scale, self.thresh)
+        # 예측과 정답을 비교하여 반환
+        nGT, nCorrect, coord_mask, conf_mask, cls_mask, tx, ty, tw, th, tconf, tcls = build_targets(pred_boxes, target.data, self.anchors, nA, nC, 
+                                                                                                    nH, nW, self.noobject_scale, self.object_scale, self.thresh)
         
         # 이진 마스크 적용 tensor 값 중 1인 원소를 TRUE로 반환 아닐 시 False
+        # shape 1, 5, 7, 7 
         cls_mask = (cls_mask == 1)
+
         #  keep those with high box confidence scores (greater than 0.25) as our final predictions
+        # conf shape 1, 5 ,7, 7
         nProposals = int((conf > 0.25).sum().data.item())
 
         # tx    = Variable(tx.cuda())
@@ -262,15 +299,20 @@ class RegionLoss(nn.Module):
         # th    = Variable(th.cuda())
         # tconf = Variable(tconf.cuda())
         # tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long().cuda())
-
         # coord_mask = Variable(coord_mask.cuda())
         # conf_mask  = Variable(conf_mask.cuda().sqrt())
         # cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cuda())
         # cls        = cls[cls_mask].view(-1, nC)  
 
-        tcls = tcls.view(-1)[cls_mask.view(-1)].long()
-        conf_mask  = conf_mask.sqrt()
-        cls_mask   = cls_mask.view(-1, 1).repeat(1,nC)
+        tx    = Variable(tx)
+        ty    = Variable(ty)
+        tw    = Variable(tw)
+        th    = Variable(th)
+        tconf = Variable(tconf)
+        tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long())
+        coord_mask = Variable(coord_mask)
+        conf_mask  = Variable(conf_mask.sqrt())
+        cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC))
         cls        = cls[cls_mask].view(-1, nC)  
 
         t3 = time.time()
@@ -286,37 +328,31 @@ class RegionLoss(nn.Module):
 
         # try focal loss with gamma = 2
         loss_cls = self.class_scale * self.focalloss(cls, tcls)
+        loss_box = loss_x + loss_y + loss_w + loss_h
 
         # sum of loss
         loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
         #print(loss)
         t4 = time.time()
 
-        # self.l_x.update(loss_x.data.item(), self.batch)
-        # self.l_y.update(loss_y.data.item(), self.batch)
-        # self.l_w.update(loss_w.data.item(), self.batch)
-        # self.l_h.update(loss_h.data.item(), self.batch)
-        # self.l_conf.update(loss_conf.data.item(), self.batch)
-        # self.l_cls.update(loss_cls.data.item(), self.batch)
-        # self.l_total.update(loss.data.item(), self.batch)
-        self.l_x.update(loss_x.detach().item(), self.batch)
-        self.l_y.update(loss_y.detach().item(), self.batch)
-        self.l_w.update(loss_w.detach().item(), self.batch)
-        self.l_h.update(loss_h.detach().item(), self.batch)
-        self.l_conf.update(loss_conf.detach().item(), self.batch)
-        self.l_cls.update(loss_cls.detach().item(), self.batch)
-        self.l_total.update(loss.detach().item(), self.batch)
-
+        self.l_x.update(loss_x.data.item(), self.batch)
+        self.l_y.update(loss_y.data.item(), self.batch)
+        self.l_w.update(loss_w.data.item(), self.batch)
+        self.l_h.update(loss_h.data.item(), self.batch)
+        self.l_conf.update(loss_conf.data.item(), self.batch)
+        self.l_cls.update(loss_cls.data.item(), self.batch)
+        self.l_total.update(loss.data.item(), self.batch)
 
         if batch_idx % 1 == 0: 
-            print('Epoch: [%d][%d/%d]:\t nGT %d, recall %d, proposals %d, loss: x %.2f(%.2f), '
+            print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
                   'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), '
                   'cls %.2f(%.2f), total %.2f(%.2f)'
                    % (epoch, batch_idx, l_loader, nGT, nCorrect, nProposals, self.l_x.val, self.l_x.avg,
                     self.l_y.val, self.l_y.avg, self.l_w.val, self.l_w.avg,
                     self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
                     self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
-        return loss
+            
+        return loss, loss_cls, loss_box
 
 
 ########################### AVA ###############################
