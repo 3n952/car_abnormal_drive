@@ -42,7 +42,7 @@ if not os.path.exists(cfg.BACKUP_DIR):
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = YOWO(cfg)
 model = model.to(device)
-model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
+# model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
 # print(model)
 pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 logging('Total number of trainable parameters: {}'.format(pytorch_total_params))
@@ -119,22 +119,30 @@ if cfg.TRAIN.EVALUATE:
     logging('evaluating ...')
     test(cfg, 0, model, test_loader)
 else:
-    loss_list = []
+    total_loss_list = []
+    loss_cls_list = []
+    loss_box_list = []
     score_list = []
+
     for epoch in range(cfg.TRAIN.BEGIN_EPOCH, cfg.TRAIN.END_EPOCH + 1):
         # Adjust learning rate
         lr_new = adjust_learning_rate(optimizer, epoch, cfg)
         
         # Train and test model
         logging('training at epoch %d, lr %f' % (epoch, lr_new))
-        loss = train(cfg, epoch, model, train_loader, loss_module, optimizer)
-        loss_list.append(loss)
-        logging('testing at epoch %d' % (epoch))
+        loss, loss_cls, loss_box = train(cfg, epoch, model, train_loader, loss_module, optimizer)
+
+        total_loss_list.append(loss.detach().numpy())
+        loss_cls_list.append(loss_cls.detach().numpy())
+        loss_box_list.append(loss_box.detach().numpy())
+
+        logging('validating at epoch %d' % (epoch))
         score = test(cfg, epoch, model, test_loader)
         score_list.append(score)
 
         # Save the model to backup directory
         is_best = score > best_score
+        
         if is_best:
             print("New best score is achieved: ", score)
             print("Previous score was: ", best_score)
@@ -145,7 +153,9 @@ else:
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(),
             'score': score_list,
-            'loss': loss_list
+            'loss': total_loss_list,
+            'cls_loss': loss_cls_list,
+            'box_loss': loss_box_list
             }
 
         save_checkpoint2(state, is_best, epoch,cfg.TRAIN.END_EPOCH, cfg.BACKUP_DIR, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
