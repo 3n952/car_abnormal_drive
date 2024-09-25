@@ -8,37 +8,46 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.utils import *
 
 
-checkpoint_path = '/Users/QBIC/Desktop/workspace/car_abnormal_driving/recognition/backup/traffic/second_test/yowo_traffic_8f30epochs_last.pth'
+checkpoint_path = 'backup/traffic/third_train/yowo_traffic_8f_16epochs_best.pth'
 
 checkpoint = torch.load(checkpoint_path)
 epochs = checkpoint['epoch']
-best_score = checkpoint['score']
-losses = checkpoint['loss']
-cls_loss = checkpoint['cls_loss']
-box_loss = checkpoint['box_loss']
-
 print("===================================================================")
-print("total epochs: ", checkpoint['epoch'])
+print("total epochs: ", epochs)
 print("Loaded model best score: ", max(checkpoint['score']))
 
-fig, axs = plt.subplots(1, 3, figsize=(10, 5))
+best_score = checkpoint['score']
+losses = checkpoint['loss']
 
-axs[0, 0].plot(losses, 'r')
-axs[0, 0].set_xlabel('Total Loss')
-axs[0, 0].set_ylabel('Epochs')
-axs[0, 0].set_title('train total loss')
+try:
+    cls_loss = checkpoint['cls_loss']
+    box_loss = checkpoint['box_loss']
 
-# 두 번째 plot (1행 2열)
-axs[0, 1].plot(cls_loss, 'g')
-axs[0, 0].set_xlabel('CLS Loss')
-axs[0, 0].set_ylabel('Epochs')
-axs[0, 1].set_title('train classification loss')
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 
-# 세 번째 plot (2행 1열)
-axs[0, 2].plot(box_loss, 'b')
-axs[0, 0].set_xlabel('LCZ Loss')
-axs[0, 0].set_ylabel('Epochs')
-axs[0, 2].set_title('train localization loss')
+    axs[0].plot(losses, 'r')
+    axs[0].set_ylabel('Total Loss')
+    axs[0].set_xlabel('Epochs')
+    axs[0].set_title('train total loss')
+
+    # 두 번째 plot (1행 2열)
+    axs[1].plot(cls_loss, 'g')
+    axs[1].set_ylabel('CLS Loss')
+    axs[1].set_xlabel('Epochs')
+    axs[1].set_title('train classification loss')
+
+    # 세 번째 plot (2행 1열)
+    axs[2].plot(box_loss, 'b')
+    axs[2].set_ylabel('LCZ Loss')
+    axs[2].set_xlabel('Epochs')
+    axs[2].set_title('train localization loss')
+
+except KeyError:
+    losses = [loss.detach().numpy() for loss in losses]
+    plt.plot(losses, 'r')
+    plt.xlabel('Epochs')
+    plt.ylabel('Total Loss')
+    plt.title('train total loss')
 
 plt.tight_layout()
 plt.show()
