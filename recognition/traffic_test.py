@@ -12,6 +12,8 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
+from collections import OrderedDict
+
 # 훈련된 모델의 결과를 확인하기 위한 스크립트
 # ------------------------------------
 # path
@@ -20,7 +22,7 @@ TRAIN_FILE= "yowo_dataset_test/trainlist.txt"
 TEST_FILE= "yowo_dataset_test/trainlist.txt"
 TEST_VIDEO_FILE= "yowo_dataset_test/trainlist_video.txt"
 
-RESUME_PATH = 'backup/traffic/second_test/yowo_traffic_8f30epochs_best.pth'
+RESUME_PATH = 'backup/traffic/second_train/yowo_traffic_8f_30epochs_best.pth'
 IMAGE_PATH = 'yowo_dataset_test/rgb-images'
 
 args  = parser.parse_args()
@@ -37,8 +39,29 @@ test_dataset = custom_dataset.Traffic_Dataset(BASE_PTH, TEST_FILE, dataset='traf
 
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 1, shuffle=False,
                                                num_workers=0, drop_last=False, pin_memory=True)
-    
+
+
+# datapallel로 훈련 시 각 레이어 앞에 module.state_dict.key가 된다. 따라서 해당 접두사를 제거해야함.
 model = YOWO(cfg)
+model = model.to(device)
+checkpoint = torch.load(RESUME_PATH)
+# print(len(checkpoint['state_dict'].keys()))
+# print(len(model.state_dict().keys()))
+
+
+try:
+    model.load_state_dict(checkpoint['state_dict'])
+    print("DataPallel model load")
+except RuntimeError:
+    new_state_dict = OrderedDict()
+    for k, v in checkpoint['state_dict'].items():
+        if k.startswith('module.'):
+            new_state_dict[k[7:]] = v  # 'module.' 접두사 제거
+        else:
+            new_state_dict[k] = v
+
+    model.load_state_dict(new_state_dict)
+    print("Torch model load")
 
 with torch.no_grad():
 
@@ -52,7 +75,8 @@ with torch.no_grad():
     iou_thresh    = 0.5
     eps           = 1e-5
     num_classes = 8
-    anchors     = [float(i) for i in [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979]]
+    #anchors = [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
+    anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
     num_anchors = 5
     conf_thresh_valid = 0.01
     total       = 0.0
@@ -67,6 +91,7 @@ with torch.no_grad():
 
     for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
         imgpath = os.path.join(IMAGE_PATH,frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+        print('image_name:', frame_idx[0][:-3])
         #print(os.path.join(IMAGE_PATH,frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png'))
         data = data.to(device)
         with torch.no_grad():
@@ -114,6 +139,7 @@ with torch.no_grad():
                 x_max = round(float(cx + cw / 2.0) * 1280.0)
                 y_max = round(float(cy + ch / 2.0) * 720.0)
 
+                # visualize results
                 image = cv2.imread(imgpath)
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -127,6 +153,7 @@ with torch.no_grad():
                 plt.imshow(image)
                 plt.axis('off')
                 plt.show()
+                
                 if best_iou > iou_thresh:
                     total_detected += 1
                     print(boxes[best_j])
@@ -137,6 +164,6 @@ with torch.no_grad():
             plt.imshow(image)
             plt.axis('off')
             plt.show()
-            break
+            
 
         
