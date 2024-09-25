@@ -58,6 +58,6 @@ if __name__ == '__main__':
     bbox_path1 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\yowo_dataset_test\labels\0\p01_20221026_183003_n1_003_03\p01_20221026_183003_n1_003_03_0001.txt'   # 실제 어노테이션 txt 파일 경로
     
     # anchor
-    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_19\p01_20221103_072002_an1_036_03_0001.txt'
+    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_1\p01_20221103_072002_an1_036_03_0001.txt'
 
     draw_bboxes(image_path, bbox_path2)

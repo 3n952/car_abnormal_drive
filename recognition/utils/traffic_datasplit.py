@@ -6,7 +6,9 @@ from glob import glob
 import json
 import os 
 import shutil
+import random
 
+# train - 0, val - 1, test - 2
 def mk_splitfiles(root_dir, split_dir, is_train = True):
 
     for d1 in tqdm.tqdm(os.listdir(root_dir)):
@@ -22,12 +24,12 @@ def mk_splitfiles(root_dir, split_dir, is_train = True):
             for d3 in os.listdir(data_root_dir2):
                 data_root_dir3 = os.path.join(data_root_dir2, d3)
 
-                if is_train:
-                    with open(os.path.join(split_dir,'trainlist_video.txt'), 'a') as f:
-                                f.writelines(f'{class_num}/{d3}\n')
-                else:
+                if not is_train:
                     with open(os.path.join(split_dir,'testlist_video.txt'), 'a') as f:
                                 f.writelines(f'{class_num}/{d3}\n')
+                # else:
+                #     with open(os.path.join(split_dir,'testlist_video.txt'), 'a') as f:
+                #                 f.writelines(f'{class_num}/{d3}\n')
 
                 for d4 in os.listdir(data_root_dir3):
                     if is_train:
@@ -122,8 +124,37 @@ def mk_label_(root_dir, label_dir):
                                 if class_num == 0:
                                     f.write(f'{0} {bbox_list[j][0]} {bbox_list[j][1]} {bbox_list[j][2]} {bbox_list[j][3]}\n')
                                 else:
-                                    f.write(f'{abdvtype[driving_type_list[j]]} {bbox_list[j][0]} {bbox_list[j][1]} {bbox_list[j][2]} {bbox_list[j][3]}\n')
+                                    try:
+                                        f.write(f'{abdvtype[driving_type_list[j]]} {bbox_list[j][0]} {bbox_list[j][1]} {bbox_list[j][2]} {bbox_list[j][3]}\n')
+                                    except KeyError:
+                                        f.write(f'{0} {bbox_list[j][0]} {bbox_list[j][1]} {bbox_list[j][2]} {bbox_list[j][3]}\n')
                                     
+
+def random_split(total_txt_path, train_txt, test_txt):
+
+    # txt load
+    with open(total_txt_path, 'r') as f:
+        data_paths = f.readlines()
+
+    data_paths = [path.strip() for path in data_paths]
+    random.shuffle(data_paths)
+
+    # split ratio
+    train_size = int(0.7 * len(data_paths))
+    train_paths = data_paths[:train_size]
+    val_paths = data_paths[train_size:]
+
+    # train / val split
+    with open(train_txt, 'w') as f:
+        for path in train_paths:
+            f.write(f"{path}\n")
+
+    with open(test_txt, 'w') as f:
+        for path in val_paths:
+            f.write(f"{path}\n")
+
+    print(f"Train set: {len(train_paths)} images")
+    print(f"Validation set: {len(val_paths)} images")
 
 
 
@@ -131,12 +162,16 @@ if __name__ == '__main__':
 
     # 예시 디렉토리 경로
 
-    img_root_dir = r'C:\Users\QBIC\Desktop\workspace\vc_datasets\01.원천데이터'
-    label_root_dir = r'C:\Users\QBIC\Desktop\workspace\vc_datasets\02.라벨링데이터'
+    img_root_dir = r'D:\datasets\01.원천데이터'
+    label_root_dir = r'D:\datasets\02.라벨링데이터'
 
-    split_dir = r'C:\Users\QBIC\Desktop\workspace\yowo_dataset_test'
-    rgb_dir = r'C:\Users\QBIC\Desktop\workspace\yowo_dataset_test\rgb-images'
-    label_dir = r'C:\Users\QBIC\Desktop\workspace\yowo_dataset_test\labels'
+    split_dir = r'D:\yowo_dataset'
+    rgb_dir = r'D:\yowo_dataset\rgb-images'
+    label_dir = r'D:\yowo_dataset\labels'
+
+    total_path = r'D:\yowo_dataset\trainlist.txt'
+    test_path = r'D:\yowo_dataset\testlist.txt'
+
 
     try:
         os.mkdir(rgb_dir)
@@ -159,3 +194,7 @@ if __name__ == '__main__':
     # label dataset 구성
     print('make label dataset')
     mk_label_(label_root_dir, label_dir)
+
+    print('train / val datasplit')
+    random_split(total_path, total_path, test_path)
+
