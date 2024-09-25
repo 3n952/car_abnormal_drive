@@ -3,18 +3,23 @@ TRAIN:
   #RESUME_PATH: '/Users/QBIC/Desktop/workspace/car_abnormal_driving/recognition/backup/traffic/second_test/yowo_traffic_8f30epochs_last.pth'
   DATASET: traffic  
   BATCH_SIZE: 1
-  TOTAL_BATCH_SIZE: 998
+  TOTAL_BATCH_SIZE: 148229
   LEARNING_RATE: 1e-4
   EVALUATE: False
   FINE_TUNE: False
   BEGIN_EPOCH: 1
-  END_EPOCH: 50
+  END_EPOCH: 2
 SOLVER:
   MOMENTUM: 0.9
   WEIGHT_DECAY: 5e-4
   STEPS: [2, 3, 4, 5]
   LR_DECAY_RATE: 0.5
-  ANCHORS: [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979]
+  # *10
+  #ANCHORS: [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979] 
+  # *3
+  #ANCHORS: [0.211374,0.356409,0.379962,0.765363,0.478146,1.224963,0.691644,1.48254,1.056996,1.775937]
+  # *1
+  ANCHORS: [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
   NUM_ANCHORS: 5
   OBJECT_SCALE: 5
   NOOBJECT_SCALE: 1
@@ -35,14 +40,15 @@ MODEL:
 WEIGHTS:
   # BACKBONE_3D: "weights/resnet-34-kinetics-cpu.pth"
   BACKBONE_3D: False
-  BACKBONE_2D: "weights/yolo.weights"
+  # BACKBONE_2D: "weights/yolo.weights"
+  BACKBONE_2D: False
   FREEZE_BACKBONE_3D: False
   FREEZE_BACKBONE_2D: False
 LISTDATA:
-  BASE_PTH: "yowo_dataset_test"
-  TRAIN_FILE: "yowo_dataset_test/trainlist.txt"
-  TEST_FILE: "yowo_dataset_test/trainlist.txt"
-  TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
+  BASE_PTH: "D:/yowo_dataset"
+  TRAIN_FILE: "custom_dataset/trainlist.txt"
+  TEST_FILE: "custom_dataset/testlist.txt"
+  #TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
   MAX_OBJS: 5
   CLASS_NAMES: [
     "정상", "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
