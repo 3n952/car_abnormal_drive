@@ -86,6 +86,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
         h1 = box1[3]
         w2 = box2[2]
         h2 = box2[3]
+
     uw = Mx - mx
     uh = My - my
     cw = w1 + w2 - uw
@@ -299,6 +300,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
 
     t0 = time.time()
     all_boxes = []
+    # 5, 13, 49 -> 13, 5, 49 -> 13, 5*7*7 = 최종 (13, 245)
     output = output.view(batch*num_anchors, 5+num_classes, h*w).transpose(0,1).contiguous().view(5+num_classes, batch*num_anchors*h*w)
 
     # grid_x = torch.linspace(0, w-1, w).repeat(h,1).repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cuda()
@@ -312,7 +314,6 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
 
     anchor_w = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([0]))
     anchor_h = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([1]))
-
     # anchor_w = anchor_w.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
     # anchor_h = anchor_h.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
     anchor_w = anchor_w.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w)
@@ -325,6 +326,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
 
 
     #cls_confs = torch.nn.Softmax()(output[5:5+num_classes].transpose(0,1))
+    # cls_confs shape = (8, 245) -> transpose: (245,8)
     cls_confs = torch.nn.Softmax(dim=1)(output[5:5+num_classes].transpose(0,1))
     
     # dim=1 축으로 가장 큰 값 추출
@@ -364,11 +366,13 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
                     # 각 anchor box에 대한 index
                     ind = b*sz_hwa + i*sz_hw + cy*w + cx
                     det_conf =  det_confs[ind]
+                    # 
                     if only_objectness:
                         conf =  det_confs[ind]
                     else:
                         conf = det_confs[ind] * cls_max_confs[ind]
-    
+
+                    # threshold 0.01
                     if conf > conf_thresh:
                         bcx = xs[ind]
                         bcy = ys[ind]
@@ -379,12 +383,15 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
 
                         # box 내 7개의 값을 삽입
                         box = [bcx/w, bcy/h, bw/w, bh/h, det_conf, cls_max_conf, cls_max_id]
+
+                        # 기존 box에 다른 cls 경우의 conf값 추가 삽입
                         if (not only_objectness) and validation:
                             for c in range(num_classes):
                                 tmp_conf = cls_confs[ind][c]
                                 if c != cls_max_id and det_confs[ind]*tmp_conf > conf_thresh:
                                     box.append(tmp_conf)
                                     box.append(c)
+
                         boxes.append(box)
         all_boxes.append(boxes)
     t3 = time.time()

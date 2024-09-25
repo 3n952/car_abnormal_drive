@@ -111,6 +111,8 @@ def test_traffic(cfg, epoch, model, test_loader):
 
                         cls_conf = float(box[5].item())
                         prob = det_conf * cls_conf
+                        
+                        # 후보 anchor 중에 conf thres 넘는 값이면 추가함
                         f_detect.write(str(int(box[6])) + ' ' + str(prob) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
                 
                 

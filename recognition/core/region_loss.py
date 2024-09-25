@@ -7,7 +7,6 @@ import math
 import torch.nn as nn
 from torch.autograd import Variable
 from core.utils import *
-#from builtins import range as xrange
 import numpy as np
 from core.FocalLoss import *
 
@@ -94,18 +93,21 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             best_iou = 0.0
             best_n = -1
             # min_dist = 10000
+
             # the values saved in target is ratios
             # times by the width and height of the output feature maps nW and nH
             gx = target[b][t*5+1] * nW
             gy = target[b][t*5+2] * nH
             
             # grid idx 파악을 위한 gi, gj
-            gi = int(gx)
-            gj = int(gy)
+            gi = int(gx) 
+            gj = int(gy) 
 
+            # target w / h
             gw = target[b][t*5+3] * nW
             gh = target[b][t*5+4] * nH
             gt_box = [0, 0, gw, gh]
+            
             for n in range(nA):
                 # get anchor parameters (2 values) anchor step = 2
                 aw = anchors[anchor_step*n]
@@ -123,6 +125,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
 
             # then we determine the parameters for an anchor (4 values together)
             gt_box = [gx, gy, gw, gh]
+
             # find corresponding prediction box
             # pred boxes has (nB*nA*nH*nW, 4) shape tensor
             # 예측한 box중 가장 높은 iou를 가진 값 좌표 추출
@@ -343,7 +346,7 @@ class RegionLoss(nn.Module):
         self.l_cls.update(loss_cls.data.item(), self.batch)
         self.l_total.update(loss.data.item(), self.batch)
 
-        if batch_idx % 1 == 0: 
+        if batch_idx % self.batch == 0: 
             print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
                   'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), '
                   'cls %.2f(%.2f), total %.2f(%.2f)'
