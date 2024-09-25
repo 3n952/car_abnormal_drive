@@ -158,8 +158,8 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     
     if dataset_use == 'traffic':
         max_num = len(os.listdir(img_folder))
-    elif dataset_use == 'jhmdb21':
-        max_num = len(os.listdir(img_folder)) - 1
+    else:
+        print('make new custom')
 
     clip = []
 
@@ -167,13 +167,13 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     ### temporal augmentation, which brings around 1-2 frame       ###
     ### mAP. During test time it is set to cfg.DATA.SAMPLING_RATE. ###
 
-    d = sampling_rate
+    # d = sampling_rate
 
     # # train시에 d는 1 or 2 sampling / test 시 d=1
-    if train:
-        d = random.randint(1, 2)
+    # if train:
+    #     d = random.randint(1, 2)
         
-    # duration = 8
+    # #duration = 8
     # for i in reversed(range(train_dur)):
     #     # make it as a loop
     #     i_temp = im_ind - i * d
