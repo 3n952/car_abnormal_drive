@@ -39,7 +39,7 @@ Since YOWO do not separate human detection and action classification procedures,
 
 ## Installation
 ```bash
-git clone https://github.com/wei-tim/YOWO.git
+git clone https://github.com/3n952/car_abnormal_drive.git
 cd YOWO
 ```
 ### 1. Dataset
