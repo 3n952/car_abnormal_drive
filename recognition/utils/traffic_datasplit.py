@@ -8,6 +8,8 @@ import os
 import shutil
 import random
 
+from data_filter import dataset_filter
+
 # train - 0, val - 1, test - 2
 def mk_splitfiles(root_dir, split_dir, is_train = True):
 
@@ -34,10 +36,10 @@ def mk_splitfiles(root_dir, split_dir, is_train = True):
                 for d4 in os.listdir(data_root_dir3):
                     if is_train:
                         with open(os.path.join(split_dir,'trainlist.txt'), 'a') as v:
-                            v.writelines(f'{class_num}/{d3}/{d4[:-3]}txt\n')
+                            v.writelines(f'{class_num}/{d3}/{d4[:-4]}txt\n')
                     else:
                         with open(os.path.join(split_dir,'testlist.txt'), 'a') as v:
-                            v.writelines(f'{class_num}/{d3}/{d4[:-3]}txt\n')
+                            v.writelines(f'{class_num}/{d3}/{d4[:-4]}txt\n')
 
 
 # 원본 데이터셋에서 yowo학습을 위한 rgb-image, label 구성
@@ -156,12 +158,54 @@ def random_split(total_txt_path, train_txt, test_txt):
     print(f"Train set: {len(train_paths)} images")
     print(f"Validation set: {len(val_paths)} images")
 
+# ========================= filtering mode ==========================================
+
+def filter_mk_splitfiles(tlist, root_dir, split_dir, is_train = True):
+    # mismatch_count = 0
+
+    for d1 in os.listdir(root_dir):
+        data_root_dir = os.path.join(root_dir, d1)
+
+        # d2 방향지시등
+        for d2 in os.listdir(data_root_dir):
+            data_root_dir2 = os.path.join(data_root_dir, d2)
+            if d1 == '정상':
+                class_num = 0
+            else:
+                class_num = int(d2[:2])
+
+            # d3 p01_..._03
+            for d3 in tqdm.tqdm(os.listdir(data_root_dir2)):
+
+                    data_root_dir3 = os.path.join(data_root_dir2, d3)
+                    if data_root_dir3 in tlist:
+
+                        if not is_train:
+                            with open(os.path.join(split_dir,'testlist_video.txt'), 'a') as f:
+                                        f.writelines(f'{class_num}/{d3}\n')
+                        # else:
+                        #     with open(os.path.join(split_dir,'testlist_video.txt'), 'a') as f:
+                        #                 f.writelines(f'{class_num}/{d3}\n')
+
+                        for d4 in os.listdir(data_root_dir3):
+                            if is_train:
+                                with open(os.path.join(split_dir,'trainlist.txt'), 'a') as v:
+                                    v.writelines(f'{class_num}/{d3}/{d4[:-4]}txt\n')
+                            else:
+                                with open(os.path.join(split_dir,'testlist.txt'), 'a') as v:
+                                    v.writelines(f'{class_num}/{d3}/{d4[:-4]}txt\n')
+                    else:
+                        # mismatch_count += 1
+                        print()
+                        print(f'mismatch data: {d3}')
+                        continue
+
+    
 
 
 if __name__ == '__main__':
 
     # 예시 디렉토리 경로
-
     img_root_dir = r'D:\datasets\01.원천데이터'
     label_root_dir = r'D:\datasets\02.라벨링데이터'
 
@@ -172,7 +216,14 @@ if __name__ == '__main__':
     total_path = r'D:\yowo_dataset\trainlist.txt'
     test_path = r'D:\yowo_dataset\testlist.txt'
 
+    # data_filter 적용 ===========================================
+    data_filter = True
 
+
+
+
+    #==================================================================================================================
+    #==================================================================================================================
     try:
         os.mkdir(rgb_dir)
     except:
@@ -184,17 +235,26 @@ if __name__ == '__main__':
         print('already exist')
 
     # dataloader에서 참고하기 위한 txt파일 만들기
-    print('make splitfiles')
-    mk_splitfiles(img_root_dir,split_dir, True)
 
-    # img dataset 구성
-    print('make img dataset')
-    mk_img_(img_root_dir, rgb_dir)
+    print('==================make splitfiles=====================')
+    if data_filter:
+        filtered = dataset_filter(json_path = label_root_dir)
+        tlist = filtered.filtering()
+        filter_mk_splitfiles(tlist, label_root_dir, split_dir, True)
+        
 
-    # label dataset 구성
-    print('make label dataset')
-    mk_label_(label_root_dir, label_dir)
+    else:
+        print('===========================make splitfiles===========================')
+        mk_splitfiles(label_root_dir,split_dir, True)
 
-    print('train / val datasplit')
+    # # img dataset 구성
+    # print('==========================make img dataset========================')
+    # mk_img_(img_root_dir, rgb_dir)
+
+    # # label dataset 구성
+    # print('=====================make label dataset======================')
+    # mk_label_(label_root_dir, label_dir)
+
+    print('===================train / val datasplit======================')
     random_split(total_path, total_path, test_path)
 

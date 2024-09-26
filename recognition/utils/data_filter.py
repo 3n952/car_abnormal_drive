@@ -2,6 +2,7 @@
 import os
 import json
 from glob import glob
+from tqdm import tqdm
 
 class dataset_filter():
     def __init__(self, json_path, resolution = (1280, 720), is_base = True):
@@ -11,6 +12,7 @@ class dataset_filter():
 
     def __count__(self):
 
+        print('=============== 설정 이외 해상도 데이터 영상  ================')
         if self.is_base:
 
             count = 0
@@ -38,20 +40,24 @@ class dataset_filter():
                                 h = jdata["imageInfo"]['height']
                                 wh = (w, h)
                                 if self.resolution != wh:
-                                    count += 1
                                     mismatch_check = True
+                                    break
                         
                         if mismatch_check:
                             print(d3)
+                            count += 1
                             continue
-        else:
-            self.json_path = 
+            else:
+                # 수정 필요
+                pass
 
 
-        print(f'설정 해상도 이외 데이터 영상 개수: ', {count})
+        print(f'설정 해상도 이외 데이터 영상 개수: {count} 개')
 
     
     def filtering(self):
+
+        tjson_path_list = []
 
         # d1 ex) 정상 
         for d1 in os.listdir(self.json_path):
@@ -62,8 +68,10 @@ class dataset_filter():
                 json_d2 = os.path.join(json_d1, d2)
                 
                 # d3  ex) 'p01_22021103_072002_an1_036_03' 
-                for d3 in os.listdir(json_d2):
+                for d3 in tqdm(os.listdir(json_d2)):
                     json_d3 = os.path.join(json_d2, d3)
+                    
+                    mismatch_check = False
 
                     #json_file ex) ~~.json
                     for json_file in os.listdir(json_d3):
@@ -75,6 +83,39 @@ class dataset_filter():
                             h = jdata["imageInfo"]['height']
                             wh = (w, h)
                             if self.resolution != wh:
+                                    mismatch_check = True
+                        break
+                    
+                    if not mismatch_check:
+                        tjson_path_list.append(json_d3)
+
+        return tjson_path_list
+
+
+        
+if __name__ == "__main__":
+
+    jsondir = 'D:/datasets/02.라벨링데이터'
+    filtered = dataset_filter(jsondir)
+
+    # 637개
+    # filtered.__count__()
+
+    filtered_data = filtered.filtering()
+    
+
+
+
+
+
+
+
+                    
+                            
+                            
+
+
+
 
 
 
