@@ -19,18 +19,32 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
 
     # training loop
     model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
+    for batch_idx, (fname, data, target) in enumerate(train_loader):
+
+        # print(f'=================={batch_idx + 1} 번째 batch의 input key frame ============================')
+        # print(fname)
+
         data = data.to(device)
+
         output = model(data)
         loss, loss_cls, loss_box = loss_module(output, target, epoch, batch_idx, l_loader)
+        # print()
 
+        # batch 별 계산
         loss.backward()
+
+        # optimizer.step()
+        # optimizer.zero_grad()
+        # loss_module.reset_meters()
+
         # total frame 수 // batchsize -> batch 개수 = step
         steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
 
         if batch_idx % steps == 0:
             optimizer.step()
             optimizer.zero_grad()
+            loss_module.reset_meters()
+
 
         # save result every 998 batches
         # if batch_idx % 998 == 0: # From time to time, reset averagemeters to see improvements
@@ -78,6 +92,7 @@ def test_traffic(cfg, epoch, model, test_loader):
             #output = model(data).data
             output = model(data)
 
+            # 예측 box와 anchor box를 비교해서 conf_thresh_valid 값 이상인 box에 대해서 
             all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
 
             for i in range(output.size(0)):

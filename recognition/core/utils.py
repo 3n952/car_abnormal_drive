@@ -388,6 +388,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
                         if (not only_objectness) and validation:
                             for c in range(num_classes):
                                 tmp_conf = cls_confs[ind][c]
+                                # conf_thresh값 넘는 값 중 나머지에 대한 cls_conf, cls 값 삽입
                                 if c != cls_max_id and det_confs[ind]*tmp_conf > conf_thresh:
                                     box.append(tmp_conf)
                                     box.append(c)
