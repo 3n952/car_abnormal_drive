@@ -13,9 +13,9 @@ def load_bbox_annotation(file_path):
             class_id = int(parts[0])
 
             #anchor 확인용
-            x_min, y_min, x_max, y_max = map(float, parts[2:])
-
             #x_min, y_min, x_max, y_max = map(float, parts[1:])
+
+            _, x_min, y_min, x_max, y_max = map(float, parts[1:])
             
             bboxes.append((class_id, int(x_min), int(y_min), int(x_max), int(y_max)))
 
@@ -54,10 +54,25 @@ def draw_bboxes(image_path, bbox_path):
 if __name__ == '__main__':
 
     # 예시 경로
-    image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\yowo_dataset_test\rgb-images\1\p01_20221103_072002_an1_036_03\p01_20221103_072002_an1_036_03_0001.png'   # 실제 이미지 경로
-    bbox_path1 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\yowo_dataset_test\labels\0\p01_20221026_183003_n1_003_03\p01_20221026_183003_n1_003_03_0001.txt'   # 실제 어노테이션 txt 파일 경로
+    image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\0\p01_20221026_183003_n1_003_03\p01_20221026_183003_n1_003_03_0001.png'   
+    # 실제 이미지 경로
+    image_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\7\p01_20230107_141213_an7_065_04\p01_20230107_141213_an7_065_04_0020.png'
+
+
+    #bbox_path1 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\yowo_dataset_test\labels\0\p01_20221026_183003_n1_003_03\p01_20221026_183003_n1_003_03_0001.txt'   # 실제 어노테이션 txt 파일 경로
     
     # anchor
-    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_1\p01_20221103_072002_an1_036_03_0001.txt'
+    # ('p10_20221103_065004_n2_270_04_0022.txt',
+    # 'p10_20221103_065004_n2_196_04_0004.txt', 
+    # 'p01_20221227_175001_n5_062_04_0015.txt', 
+    # 'p08_20221004_143003_n6_004_05_0022.txt', 
+    # 'p01_20221214_173005_n5_089_04_0012.txt', 
+    # 'p01_20221224_161010_n5_055_05_0016.txt', 
+    # 'p01_20230106_071002_an3_036_07_0004.txt', 
+    # 'p01_20221213_105002_n3_007_06_0021.txt')
 
-    draw_bboxes(image_path, bbox_path2)
+    bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\test_2\detections_2\p01_20221026_183003_n1_003_03_0001.txt'
+    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\test_2\detections_2\p01_20230107_141213_an7_065_04_0020.txt'
+
+    draw_bboxes(image_path, bbox_path)
+    draw_bboxes(image_path2, bbox_path2)
