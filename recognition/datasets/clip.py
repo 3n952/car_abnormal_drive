@@ -239,7 +239,8 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     # ------------------------------------
 
     if train:
-        return clip, label
+        return fname, clip, label
+    
     else:
         #return im_split[0] + '_' +im_split[1] + '_' + im_split[2], clip, label
         return fname, clip, label
