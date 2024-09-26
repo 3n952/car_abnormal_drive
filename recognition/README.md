@@ -1,10 +1,13 @@
-# You Only Watch Once (YOWO)
+# recognize abnormal driving using "You Only Watch Once (YOWO)"
 
-PyTorch implementation of the article "[You Only Watch Once: A Unified CNN Architecture for Real-Time Spatiotemporal Action Localization](https://github.com/wei-tim/YOWO/blob/master/examples/YOWO_updated.pdf)". The repositry contains code for real-time spatiotemporal action localization with PyTorch on AVA, UCF101-24 and JHMDB datasets!
+# YOWO 
+PyTorch implementation of the article "You Only Watch Once: A Unified CNN Architecture for Real-Time Spatiotemporal Action Localization". The repositry contains code for real-time spatiotemporal action localization with PyTorch.
+Presenting ***YOWO*** (***Y**ou **O**nly **W**atch **O**nce*), a unified CNN architecture for real-time spatiotemporal action localization in video stream. *YOWO* is a single-stage framework, the input is a clip consisting of several successive frames in a video, while the output predicts bounding box positions as well as corresponding class labels in current frame. Afterwards, with specific strategy, these detections can be linked together to generate *Action Tubes* in the whole video.
 
-**Updated paper** can be accessed via [**YOWO_updated.pdf**](https://github.com/wei-tim/YOWO/blob/master/examples/YOWO_updated.pdf)
+Since YOWO do not separate human detection and action classification procedures, the whole network can be optimized by a joint loss in an end-to-end framework. YOWO have carried out a series of comparative evaluations on two challenging representative datasets **UCF101-24** and **J-HMDB-21**. Our approach outperforms the other state-of-the-art results while retaining real-time capability, providing 34 frames-per-second on 16-frames input clips and 62 frames-per-second on 8-frames input clips.
 
-AVA dataset visualizations!
+## Visualize our work(traffic)
+(수정 필요)
 <br/>
 <br/>
 <div align="center" style="width:image width px;">
@@ -15,7 +18,6 @@ AVA dataset visualizations!
 <br/>
 <br/>
 
-UCF101-24 and J-HMDB-21 datasets visualizations!
 <br/>
 <div align="center" style="width:image width px;">
   <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/biking.gif" width=240 alt="biking">
@@ -31,67 +33,47 @@ UCF101-24 and J-HMDB-21 datasets visualizations!
 <br/>
 <br/>
   
-In this work, we present ***YOWO*** (***Y**ou **O**nly **W**atch **O**nce*), a unified CNN architecture for real-time spatiotemporal action localization in video stream. *YOWO* is a single-stage framework, the input is a clip consisting of several successive frames in a video, while the output predicts bounding box positions as well as corresponding class labels in current frame. Afterwards, with specific strategy, these detections can be linked together to generate *Action Tubes* in the whole video.
 
-Since we do not separate human detection and action classification procedures, the whole network can be optimized by a joint loss in an end-to-end framework. We have carried out a series of comparative evaluations on two challenging representative datasets **UCF101-24** and **J-HMDB-21**. Our approach outperforms the other state-of-the-art results while retaining real-time capability, providing 34 frames-per-second on 16-frames input clips and 62 frames-per-second on 8-frames input clips.
 
+# How to use YOWO for traffic dataset
 
 ## Installation
 ```bash
 git clone https://github.com/wei-tim/YOWO.git
 cd YOWO
 ```
+### 1. Dataset
+traffic dataset download : 'https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=data&dataSetSn=71566'
 
-### Datasets
+### 2. Download backbone pretrained weights
 
-* AVA	   : Download from [here](https://github.com/cvdfoundation/ava-dataset)
-* UCF101-24: Download from [here](https://drive.google.com/file/d/1o2l6nYhd-0DDXGP-IPReBP4y1ffVmGSE/view?usp=sharing)
-* J-HMDB-21: Download from [here](http://jhmdb.is.tue.mpg.de/challenge/JHMDB/datasets)
+아래에서 각 Backbone에 대한 pretrained model을 다운 받을 수 있다.
 
-Use instructions [here](https://github.com/facebookresearch/SlowFast/blob/master/slowfast/datasets/DATASET.md) for the preperation of AVA dataset.
-
-Modify the paths in ucf24.data and jhmdb21.data under cfg directory accordingly.
-Download the dataset annotations from [here](https://www.dropbox.com/sh/16jv2kwzom1pmlt/AABL3cFWDfG5MuH9PwnjSJf0a?dl=0).
-
-### Download backbone pretrained weights
-
-* Darknet-19 weights can be downloaded via:
+* Darknet-19 weights
 ```bash
 wget http://pjreddie.com/media/files/yolo.weights
 ```
 
 * ResNeXt ve ResNet pretrained models can be downloaded from [here](https://drive.google.com/drive/folders/1zvl89AgFAApbH0At-gMuZSeQB_LpNP-M?usp=sharing).
 
-***NOTE:*** For JHMDB-21 trainings, HMDB-51 finetuned pretrained models should be used! (e.g. "resnext-101-kinetics-hmdb51_split1.pth").
+***NOTE:*** 기존 YOWO 학습 및 평가로 사용된 AVA, .. 등 dataset(action recognition)의 pretrained model은 traffic feature를 추출하기에 알맞지 않아 처음부터 train 시키는 것을 추천.
 
 * For resource efficient 3D CNN architectures (ShuffleNet, ShuffleNetv2, MobileNet, MobileNetv2), pretrained models can be downloaded from [here](https://github.com/okankop/Efficient-3DCNNs).
 
-### Pretrained YOWO models
+### 3. Pretrained YOWO models
 
-Pretrained models for UCF101-24 and J-HMDB-21 datasets can be downloaded from [here](https://www.dropbox.com/sh/16jv2kwzom1pmlt/AABL3cFWDfG5MuH9PwnjSJf0a?dl=0).
-
-Pretrained models for AVA dataset can be downloaded from [here](https://drive.google.com/drive/folders/1g-jTfxCV9_uNFr61pjo4VxNfgDlbWLlb?usp=sharing).
-
-All materials (annotations and pretrained models) are also available in Baiduyun Disk:
-[here](https://pan.baidu.com/s/1yaOYqzcEx96z9gAkOhMnvQ) with password 95mm
+Pretrained models for traffic datasets can be downloaded from '수정'[here](https://www.dropbox.com/sh/16jv2kwzom1pmlt/AABL3cFWDfG5MuH9PwnjSJf0a?dl=0).
 
 ## Running the code
 
-* All training configurations are given in [ava.yaml](https://github.com/wei-tim/YOWO/blob/master/cfg/ava.yaml), [ucf24.yaml](https://github.com/wei-tim/YOWO/blob/master/cfg/ucf24.yaml) and [jhmdb.yaml](https://github.com/wei-tim/YOWO/blob/master/cfg/jhmdb.yaml) files.
-* AVA training:
+* Training configuration(cfg)를 확인하고 조정할 것.
+* 참고: [ava.yaml](https://github.com/wei-tim/YOWO/blob/master/cfg/ava.yaml), [ucf24.yaml](https://github.com/wei-tim/YOWO/blob/master/cfg/ucf24.yaml) and [jhmdb.yaml](https://github.com/wei-tim/YOWO/blob/master/cfg/jhmdb.yaml) files.
+* training:
 ```bash
-python main.py --cfg cfg/ava.yaml
-```
-* UCF101-24 training:
-```bash
-python main.py --cfg cfg/ucf24.yaml
-```
-* J-HMDB-21 training:
-```bash
-python main.py --cfg cfg/jhmdb.yaml
+python main.py --cfg cfg/traffic.yaml
 ```
 
-## Validating the model
+## Validating the model (수정필요)
 
 * For AVA dataset, after each epoch, validation is performed and frame-mAP score is provided.
 
