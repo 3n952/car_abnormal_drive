@@ -2,13 +2,13 @@ TRAIN:
   RESUME_PATH: False # -> cfg.default에서 수정
   #RESUME_PATH: '/Users/QBIC/Desktop/workspace/car_abnormal_driving/recognition/backup/traffic/second_test/yowo_traffic_8f30epochs_last.pth'
   DATASET: traffic  
-  BATCH_SIZE: 1
+  BATCH_SIZE: 8
   TOTAL_BATCH_SIZE: 148229
   LEARNING_RATE: 1e-4
   EVALUATE: False
   FINE_TUNE: False
   BEGIN_EPOCH: 1
-  END_EPOCH: 2
+  END_EPOCH: 15
 SOLVER:
   MOMENTUM: 0.9
   WEIGHT_DECAY: 5e-4
@@ -21,7 +21,7 @@ SOLVER:
   # *1
   ANCHORS: [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
   NUM_ANCHORS: 5
-  OBJECT_SCALE: 5
+  OBJECT_SCALE: 3
   NOOBJECT_SCALE: 1
   CLASS_SCALE: 1
   COORD_SCALE: 1
@@ -45,9 +45,9 @@ WEIGHTS:
   FREEZE_BACKBONE_3D: False
   FREEZE_BACKBONE_2D: False
 LISTDATA:
-  BASE_PTH: "D:/yowo_dataset"
-  TRAIN_FILE: "custom_dataset/trainlist.txt"
-  TEST_FILE: "custom_dataset/testlist.txt"
+  BASE_PTH: "custom_dataset"
+  TRAIN_FILE: "custom_dataset/testlist2.txt"
+  TEST_FILE: "custom_dataset/testlist2.txt"
   #TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
   MAX_OBJS: 5
   CLASS_NAMES: [
