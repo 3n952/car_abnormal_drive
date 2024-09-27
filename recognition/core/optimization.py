@@ -43,7 +43,6 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         if batch_idx % steps == 0:
             optimizer.step()
             optimizer.zero_grad()
-            loss_module.reset_meters()
 
 
         # save result every 998 batches
