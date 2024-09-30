@@ -49,7 +49,7 @@ if __name__ =='__main__':
 
     seed = int(time.time())
     torch.manual_seed(seed)
-    use_cuda = False
+    use_cuda = True
     if use_cuda:
         os.environ['CUDA_VISIBLE_DEVICES'] = '0' # TODO: add to config e.g. 0,1,2,3
         torch.cuda.manual_seed(seed)
@@ -89,7 +89,7 @@ if __name__ =='__main__':
     ####### Data loader, training scheme and loss function are different for AVA and UCF24/JHMDB21 datasets
     # ---------------------------------------------------------------
     # multithread core set
-    torch.set_num_threads(cfg.DATA.NUM_FRAMES)
+    torch.set_num_threads(cfg.cfg.DATA_LOADER.NUM_WORKERS)
 
     # dataset loader
     dataset = cfg.TRAIN.DATASET
@@ -135,6 +135,10 @@ if __name__ =='__main__':
             # Train and test model
             logging('training at epoch %d, lr %f' % (epoch, lr_new))
             loss, loss_cls, loss_box = train(cfg, epoch, model, train_loader, loss_module, optimizer)
+
+            loss = convert2cpu(loss)
+            loss_cls = convert2cpu(loss_cls)
+            loss_box = convert2cpu(loss_box)
 
             total_loss_list.append(loss.detach().numpy())
             loss_cls_list.append(loss_cls.detach().numpy())
