@@ -55,14 +55,20 @@ def data_augmentation(clip, shape, jitter, hue, saturation, exposure):
     dw =int(ow*jitter)
     dh =int(oh*jitter)
 
+    # 
     pleft  = random.randint(-dw, dw)
     pright = random.randint(-dw, dw)
     ptop   = random.randint(-dh, dh)
     pbot   = random.randint(-dh, dh)
+    
+    # 좌표 보정 최소 150사이즈 crop
+    # swidth =  max(150, ow - pleft - pright)
+    # sheight = max(150, oh - ptop - pbot)
 
-    swidth =  ow - pleft - pright
+    swidth = ow - pleft - pright
     sheight = oh - ptop - pbot
 
+    # 좌표의 비율
     sx = float(swidth)  / ow
     sy = float(sheight) / oh
     
