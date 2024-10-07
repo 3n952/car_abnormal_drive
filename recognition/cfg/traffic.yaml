@@ -3,12 +3,12 @@ TRAIN:
   #RESUME_PATH: '/Users/QBIC/Desktop/workspace/car_abnormal_driving/recognition/backup/traffic/second_test/yowo_traffic_8f30epochs_last.pth'
   DATASET: traffic  
   BATCH_SIZE: 8
-  TOTAL_BATCH_SIZE: 148229
+  TOTAL_BATCH_SIZE: 451
   LEARNING_RATE: 1e-4
   EVALUATE: False
   FINE_TUNE: False
   BEGIN_EPOCH: 1
-  END_EPOCH: 15
+  END_EPOCH: 100
 SOLVER:
   MOMENTUM: 0.9
   WEIGHT_DECAY: 5e-4
@@ -46,8 +46,8 @@ WEIGHTS:
   FREEZE_BACKBONE_2D: False
 LISTDATA:
   BASE_PTH: "custom_dataset"
-  TRAIN_FILE: "custom_dataset/testlist2.txt"
-  TEST_FILE: "custom_dataset/testlist2.txt"
+  TRAIN_FILE: "custom_dataset/trainlist.txt"
+  TEST_FILE: "custom_dataset/testlist.txt"
   #TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
   MAX_OBJS: 5
   CLASS_NAMES: [
