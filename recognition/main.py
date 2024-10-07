@@ -26,7 +26,7 @@ args  = parser.parse_args()
 cfg   = parser.load_config(args)
 
 
-####### Check backup directory, create if necessary
+####### Check backup directory, create if necess    ary
 # ---------------------------------------------------------------
 if not os.path.exists(cfg.BACKUP_DIR):
     os.makedirs(cfg.BACKUP_DIR)
@@ -89,7 +89,7 @@ if __name__ =='__main__':
     ####### Data loader, training scheme and loss function are different for AVA and UCF24/JHMDB21 datasets
     # ---------------------------------------------------------------
     # multithread core set
-    torch.set_num_threads(cfg.cfg.DATA_LOADER.NUM_WORKERS)
+    torch.set_num_threads(cfg.DATA_LOADER.NUM_WORKERS)
 
     # dataset loader
     dataset = cfg.TRAIN.DATASET
