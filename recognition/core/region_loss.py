@@ -180,7 +180,7 @@ class RegionLoss(nn.Module):
         self.noobject_scale = cfg.SOLVER.NOOBJECT_SCALE
         self.class_scale    = cfg.SOLVER.CLASS_SCALE
         self.coord_scale    = cfg.SOLVER.COORD_SCALE
-        self.focalloss      = FocalLoss(class_num=self.num_classes, gamma=2, size_average=False)
+        self.focalloss      = FocalLoss(class_num=self.num_classes, gamma=2, size_average=True)
         self.thresh = 0.6
 
         # value, count, sum을 이용하여 average를 구함 -> 진행 배치까지의 평균 loss 계산
@@ -227,20 +227,24 @@ class RegionLoss(nn.Module):
 
         # anchor's parameter tx
         # gpu mode => x    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([0])).view(nB, nA, nH, nW))
-        x    = torch.sigmoid(output.index_select(2, torch.LongTensor([0])).view(nB, nA, nH, nW))
+        # cpu mode => x    = torch.sigmoid(output.index_select(2, torch.LongTensor([0])).view(nB, nA, nH, nW))
+        
+        x    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([0])).view(nB, nA, nH, nW))
         # anchor's parameter ty
-        y    = torch.sigmoid(output.index_select(2, torch.LongTensor([1])).view(nB, nA, nH, nW))
+        y    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([1])).view(nB, nA, nH, nW))
         # anchor's parameter tw
-        w    = output.index_select(2, torch.LongTensor([2])).view(nB, nA, nH, nW)
+        w    = output.index_select(2, torch.cuda.LongTensor([2])).view(nB, nA, nH, nW)
         # anchor's parameter th
-        h    = output.index_select(2, torch.LongTensor([3])).view(nB, nA, nH, nW)
+        h    = output.index_select(2, torch.cuda.LongTensor([3])).view(nB, nA, nH, nW)
         # confidence score for each anchor
-        conf = torch.sigmoid(output.index_select(2, torch.LongTensor([4])).view(nB, nA, nH, nW))
+        conf = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([4])).view(nB, nA, nH, nW))
 
         # anchor's parameter class label
-        #cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
+        cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
+        #cls  = output.index_select(2, torch.linspace(5,5+nC-1,nC).long())
+
         #ouput 3번째 차원(13개)의 5 ~ 11 인덱스에 접근
-        cls  = output.index_select(2, torch.linspace(5,5+nC-1,nC).long())
+        output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
         
         # resize the data structure so that for every anchor there is a class label in the last dimension
         cls  = cls.view(nB*nA, nC, nH*nW).transpose(1,2).contiguous().view(nB*nA*nH*nW, nC)
@@ -250,20 +254,20 @@ class RegionLoss(nn.Module):
         pred_boxes = torch.FloatTensor(4, nB*nA*nH*nW)
 
         # tx and ty
-        # grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
-        # grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+        # grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
+        # grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
         # 각 그리드 시작점 좌표
-        grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
-        grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
+        grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+        grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
 
         # for each anchor there are anchor_step variables (with the structure num_anchor*anchor_step)
         # for each row(anchor), the first variable is anchor's width, second is anchor's height
 
         # pw and ph
-        # anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0])).cuda()
-        # anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1])).cuda()
-        anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0]))
-        anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1]))
+        anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0])).cuda()
+        anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1])).cuda()
+        # anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0]))
+        # anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1]))
 
         # for each pixel (grid) repeat the above process (obtain width and height of each grid)
         anchor_w = anchor_w.repeat(nB, 1).repeat(1, 1, nH*nW).view(nB*nA*nH*nW)
@@ -288,8 +292,7 @@ class RegionLoss(nn.Module):
         # the size -1 is inferred from other dimensions
 
         # pred_boxes (nB*nA*nH*nW, 4)
-        # pred_boxes = convert2cpu(pred_boxes.transpose(0,1).contiguous().view(-1,4))
-        pred_boxes = convert(pred_boxes.transpose(0,1).contiguous().view(-1,4))
+        pred_boxes = convert2cpu(pred_boxes.transpose(0,1).contiguous().view(-1,4))
         t2 = time.time()
 
         # 예측과 정답을 비교하여 반환
@@ -304,27 +307,28 @@ class RegionLoss(nn.Module):
         # conf shape 1, 5 ,7, 7
         nProposals = int((conf > 0.25).sum().data.item())
 
-        # tx    = Variable(tx.cuda())
-        # ty    = Variable(ty.cuda())
-        # tw    = Variable(tw.cuda())
-        # th    = Variable(th.cuda())
-        # tconf = Variable(tconf.cuda())
-        # tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long().cuda())
-        # coord_mask = Variable(coord_mask.cuda())
-        # conf_mask  = Variable(conf_mask.cuda().sqrt())
-        # cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cuda())
-        # cls        = cls[cls_mask].view(-1, nC)  
-
-        tx    = Variable(tx)
-        ty    = Variable(ty)
-        tw    = Variable(tw)
-        th    = Variable(th)
-        tconf = Variable(tconf)
-        tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long())
-        coord_mask = Variable(coord_mask)
-        conf_mask  = Variable(conf_mask.sqrt())
-        cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC))
+        tx    = Variable(tx.cuda())
+        ty    = Variable(ty.cuda())
+        tw    = Variable(tw.cuda())
+        th    = Variable(th.cuda())
+        tconf = Variable(tconf.cuda())
+        tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long().cuda())
+        coord_mask = Variable(coord_mask.cuda())
+        conf_mask  = Variable(conf_mask.cuda().sqrt())
+        cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cuda())
         cls        = cls[cls_mask].view(-1, nC)  
+
+        # cpu train mode
+        # tx    = Variable(tx)
+        # ty    = Variable(ty)
+        # tw    = Variable(tw)
+        # th    = Variable(th)
+        # tconf = Variable(tconf)
+        # tcls = Variable(tcls.view(-1)[cls_mask.view(-1)].long())
+        # coord_mask = Variable(coord_mask)
+        # conf_mask  = Variable(conf_mask.sqrt())
+        # cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC))
+        # cls        = cls[cls_mask].view(-1, nC)  
 
         t3 = time.time()
 
