@@ -8,9 +8,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.utils import *
 
 
-checkpoint_path = 'backup/traffic/third_train/yowo_traffic_8f_16epochs_best.pth'
+checkpoint_path = 'backup/traffic/fourth_train/yowo_traffic_8f_100epochs_last.pth'
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-checkpoint = torch.load(checkpoint_path)
+checkpoint = torch.load(checkpoint_path, map_location =device)
+
 epochs = checkpoint['epoch']
 print("===================================================================")
 print("total epochs: ", epochs)
