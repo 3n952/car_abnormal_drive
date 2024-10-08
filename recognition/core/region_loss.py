@@ -373,12 +373,15 @@ class RegionLoss(nn.Module):
         #             self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
 
             # batch 마다 loss 계산 출력
-            print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
-                'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), ''cls %.2f(%.2f), total %.2f(%.2f)'
-                % (epoch, batch_idx, l_loader, nGT, nCorrect, nProposals, self.l_x.val, self.l_x.avg,
+            print('Epoch: [%d][%d/%d]: training loss - [%f]=======================\npredict: [nGT %d, correct %d, proposals %d],\nloss: [x %.2f(%.2f), '
+                'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), ''cls %.2f(%.2f)]'
+                % (epoch, batch_idx, l_loader, self.l_total.avg, nGT, nCorrect, nProposals, self.l_x.val, self.l_x.avg,
                     self.l_y.val, self.l_y.avg, self.l_w.val, self.l_w.avg,
                     self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
-                    self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
+                    self.l_cls.val, self.l_cls.avg))
+            
+        
+
         else:
             pass
 

@@ -10,7 +10,11 @@ from core.utils import *
 def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
     t0 = time.time()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # loss initialize
+    # to see loss improvement for each epochs
     loss_module.reset_meters()
+
     # region loss
     l_loader = len(train_loader)
 
@@ -34,13 +38,15 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         # loss_module.reset_meters()
 
         #gradient accumulation 
-        # total frame 수 // batchsize -> batch 개수 = step
-        steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
+        
+        # total frame 수 // batchsize -> batch 개수 = step 즉, epoch마다 가중치 backprop계산
+        #steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
+        
+        # 4개 배치마다 gradient calculate
+        steps = 4
         if batch_idx % steps == 0:
             optimizer.step()
             optimizer.zero_grad()
-
-
 
     t1 = time.time()
     logging('trained with %f samples in %d seconds' % (len(train_loader.dataset), (t1-t0)))
@@ -66,12 +72,12 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
     anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
     num_anchors = cfg.SOLVER.NUM_ANCHORS
     conf_thresh_valid = 0.4
-    total       = 0.0
-    proposals   = 0.0
-    correct     = 0.0
-    fscore = 0.0
+    # total       = 0.0
+    # proposals   = 0.0
+    # correct     = 0.0
+    # fscore = 0.0
     #correct_classification = 0.0
-    total_detected = 0.0
+    # total_detected = 0.0
 
     nbatch = len(test_loader)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -82,6 +88,13 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
     l_loader = len(test_loader)
 
     for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
+        #total  = 0.0
+        proposals = 0.0
+        correct = 0.0
+        fscore = 0.0
+        #correct_classification = 0.0
+        total_detected = 0.0
+
         data = data.to(device)
         with torch.no_grad():
             #output = model(data).data
@@ -132,11 +145,11 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 truths = target[i].view(-1, 5)
                 num_gts = truths_length(truths)
         
-                total = total + num_gts
+                #total = total + num_gts
                 pred_list = [] # LIST OF CONFIDENT BOX INDICES
                 for i in range(len(boxes)):
-                    # det conf > 0.25
-                    if boxes[i][4] > 0.7:
+                    # det conf > 0.6
+                    if boxes[i][4] > 0.6:
                         proposals = proposals+1
                         pred_list.append(i)
 
@@ -151,15 +164,18 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                             best_iou = iou
 
                     if best_iou > iou_thresh:
+                        # tp+false positive
                         total_detected += 1
                         if int(boxes[best_j][6]) == box_gt[6]:
+                            # true positive
                             #correct_classification += 1
                             correct += 1
 
-            precision = 1.0*correct/(proposals+eps)
-            recall = 1.0*correct/(total+eps)
-            fscore = 2.0*precision*recall/(precision+recall+eps)
-            logging("[%d/%d] precision: %f, recall: %f, fscore: %f" % (batch_idx, nbatch, precision, recall, fscore))
+            #assert num_gts == total_detected + correct 
+            recall= 1.0*correct / (num_gts+eps)
+            precision = 1.0*correct/ (proposals+eps)
+            fscore = 2.0*precision*recall/ (precision+recall+eps)
+            logging("[%d/%d]\t precision: %f, recall: %f, fscore: %f" % (batch_idx, nbatch, precision, recall, fscore))
 
     # classification_accuracy = 1.0 * correct_classification / (total_detected + eps)
     # localization_recall = 1.0 * total_detected / (total + eps)
