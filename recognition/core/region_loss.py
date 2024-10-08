@@ -182,6 +182,7 @@ class RegionLoss(nn.Module):
         self.coord_scale    = cfg.SOLVER.COORD_SCALE
         self.focalloss      = FocalLoss(class_num=self.num_classes, gamma=2, size_average=True)
         self.thresh = 0.6
+        
 
         # value, count, sum을 이용하여 average를 구함 -> 진행 배치까지의 평균 loss 계산
         self.l_x = AverageMeter()
@@ -202,7 +203,7 @@ class RegionLoss(nn.Module):
         self.l_total.reset()
 
 
-    def forward(self, output, target, epoch, batch_idx, l_loader):
+    def forward(self, output, target, epoch, batch_idx, l_loader, train_mode):
         # output : B*A*(4+1+num_classes)*H*W
         # B: number of batches
         # A: number of anchors
@@ -212,6 +213,7 @@ class RegionLoss(nn.Module):
         # H: height of the image (in grids)
         # W: width of the image (in grids)
         # for each grid cell, there are A*(4+1+num_classes) parameters
+
         t0 = time.time()
 
         # output batch size
@@ -251,7 +253,7 @@ class RegionLoss(nn.Module):
         t1 = time.time()
 
         # for the prediction of localization of each bounding box, there exist 4 parameters (tx, ty, tw, th)
-        pred_boxes = torch.FloatTensor(4, nB*nA*nH*nW)
+        pred_boxes = torch.cuda.FloatTensor(4, nB*nA*nH*nW)
 
         # tx and ty
         # grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW)
@@ -352,13 +354,14 @@ class RegionLoss(nn.Module):
         #print(loss)
         t4 = time.time()
 
-        self.l_x.update(loss_x.data.item(), self.batch)
-        self.l_y.update(loss_y.data.item(), self.batch)
-        self.l_w.update(loss_w.data.item(), self.batch)
-        self.l_h.update(loss_h.data.item(), self.batch)
-        self.l_conf.update(loss_conf.data.item(), self.batch)
-        self.l_cls.update(loss_cls.data.item(), self.batch)
-        self.l_total.update(loss.data.item(), self.batch)
+        if train_mode:
+            self.l_x.update(loss_x.data.item(), self.batch)
+            self.l_y.update(loss_y.data.item(), self.batch)
+            self.l_w.update(loss_w.data.item(), self.batch)
+            self.l_h.update(loss_h.data.item(), self.batch)
+            self.l_conf.update(loss_conf.data.item(), self.batch)
+            self.l_cls.update(loss_cls.data.item(), self.batch)
+            self.l_total.update(loss.data.item(), self.batch)
 
         # if batch_idx % self.batch == 0: 
         #     print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
@@ -369,14 +372,16 @@ class RegionLoss(nn.Module):
         #             self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
         #             self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
 
-        # batch 마다 loss 계산 출력
-        print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
-              'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), ''cls %.2f(%.2f), total %.2f(%.2f)'
-              % (epoch, batch_idx, l_loader, nGT, nCorrect, nProposals, self.l_x.val, self.l_x.avg,
-                 self.l_y.val, self.l_y.avg, self.l_w.val, self.l_w.avg,
-                 self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
-                 self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
-            
+            # batch 마다 loss 계산 출력
+            print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
+                'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), ''cls %.2f(%.2f), total %.2f(%.2f)'
+                % (epoch, batch_idx, l_loader, nGT, nCorrect, nProposals, self.l_x.val, self.l_x.avg,
+                    self.l_y.val, self.l_y.avg, self.l_w.val, self.l_w.avg,
+                    self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
+                    self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
+        else:
+            pass
+
         return loss, loss_cls, loss_box
 
 

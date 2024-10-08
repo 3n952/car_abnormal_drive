@@ -179,7 +179,7 @@ def nms(boxes, nms_thresh):
 
     det_confs = torch.zeros(len(boxes))
     for i in range(len(boxes)):
-        det_confs[i] = 1-boxes[i][4]                
+        det_confs[i] = boxes[i][4]                
 
     _,sortIds = torch.sort(det_confs)
     out_boxes = []
@@ -288,6 +288,8 @@ def convert2long(matrix):
 
 def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, only_objectness=1, validation=False):
 
+    # output shape -> 8, 65 , 7, 7
+    
     anchor_step = len(anchors)//num_anchors
     if output.dim() == 3:
         output = output.unsqueeze(0)
@@ -354,9 +356,10 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     # ws = convert(ws)
     # hs = convert(hs)
 
-    if validation:
-        #cls_confs = convert2cpu(cls_confs.view(-1, num_classes))
-        cls_confs = cls_confs.view(-1, num_classes)
+    # if validation:
+    #     cls_confs = convert2cpu(cls_confs.view(-1, num_classes))
+    cls_confs = convert2cpu(cls_confs.view(-1, num_classes))
+        
 
     t2 = time.time()
     for b in range(batch):
@@ -373,7 +376,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
                     else:
                         conf = det_confs[ind] * cls_max_confs[ind]
 
-                    # threshold 0.01
+                    # threshold 0.4
                     if conf > conf_thresh:
                         bcx = xs[ind]
                         bcy = ys[ind]
@@ -562,8 +565,6 @@ def get_region_boxes_video(output, conf_thresh, num_classes, anchors, num_anchor
         print('      boxes filter : %f' % (t3-t2))
         print('---------------------------------')
     return all_boxes
-
-
 
 
 def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
