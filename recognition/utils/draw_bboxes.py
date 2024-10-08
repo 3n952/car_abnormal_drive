@@ -54,7 +54,7 @@ def draw_bboxes(image_path, bbox_path):
 if __name__ == '__main__':
 
     # 예시 경로
-    image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\0\p01_20221026_183003_n1_003_03\p01_20221026_183003_n1_003_03_0001.png'   
+    image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\2\p02_20221223_123007_an2_011_03\p02_20221223_123007_an2_011_03_0002.png'   
     # 실제 이미지 경로
     image_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\7\p01_20230107_141213_an7_065_04\p01_20230107_141213_an7_065_04_0020.png'
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     # 'p01_20221213_105002_n3_007_06_0021.txt')
 
     bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\test_2\detections_2\p01_20221026_183003_n1_003_03_0001.txt'
-    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\test_2\detections_2\p01_20230107_141213_an7_065_04_0020.txt'
+    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_1\p02_20221223_123007_an2_011_03_0002.txt'
 
-    draw_bboxes(image_path, bbox_path)
-    draw_bboxes(image_path2, bbox_path2)
+    #draw_bboxes(image_path, bbox_path)
+    draw_bboxes(image_path, bbox_path2)

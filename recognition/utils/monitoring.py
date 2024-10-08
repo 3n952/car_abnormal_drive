@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.utils import *
 
 
-checkpoint_path = 'backup/traffic/fourth_train/yowo_traffic_8f_100epochs_last.pth'
+checkpoint_path = 'backup/traffic/fifth_train/yowo_traffic_8f_10epochs_last.pth'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 checkpoint = torch.load(checkpoint_path, map_location =device)
@@ -18,34 +18,52 @@ print("===================================================================")
 print("total epochs: ", epochs)
 print("Loaded model best score: ", max(checkpoint['score']))
 
-best_score = checkpoint['score']
-losses = checkpoint['loss']
+train_losses = checkpoint['train_loss']
+val_losses = checkpoint['val_loss']
 
 try:
-    cls_loss = checkpoint['cls_loss']
-    box_loss = checkpoint['box_loss']
+    train_cls_loss = checkpoint['train_cls_loss']
+    train_box_loss = checkpoint['train_box_loss']
+    val_cls_loss = checkpoint['val_cls_loss']
+    val_box_loss = checkpoint['val_box_loss']
 
-    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 
-    axs[0].plot(losses, 'r')
-    axs[0].set_ylabel('Total Loss')
-    axs[0].set_xlabel('Epochs')
-    axs[0].set_title('train total loss')
+    fig, axs = plt.subplots(2, 3, figsize=(15, 5))
 
-    # 두 번째 plot (1행 2열)
-    axs[1].plot(cls_loss, 'g')
-    axs[1].set_ylabel('CLS Loss')
-    axs[1].set_xlabel('Epochs')
-    axs[1].set_title('train classification loss')
+    # training loss
+    axs[0,0].plot(train_losses, 'r')
+    axs[0,0].set_ylabel('Total train Loss')
+    axs[0,0].set_xlabel('Epochs')
+    axs[0,0].set_title('train total loss')
 
-    # 세 번째 plot (2행 1열)
-    axs[2].plot(box_loss, 'b')
-    axs[2].set_ylabel('LCZ Loss')
-    axs[2].set_xlabel('Epochs')
-    axs[2].set_title('train localization loss')
+    axs[0,1].plot(train_cls_loss, 'g')
+    axs[0,1].set_ylabel('CLS train Loss')
+    axs[0,1].set_xlabel('Epochs')
+    axs[0,1].set_title('train classification loss')
+
+    axs[0,2].plot(train_box_loss, 'b')
+    axs[0,2].set_ylabel('LCZ train Loss')
+    axs[0,2].set_xlabel('Epochs')
+    axs[0,2].set_title('train localization loss')
+    
+    ### validation loss
+    axs[1,0].plot(val_losses, 'r')
+    axs[1,0].set_ylabel('Total validation Loss')
+    axs[1,0].set_xlabel('Epochs')
+    axs[1,0].set_title('validation total loss')
+
+    axs[1,1].plot(val_cls_loss, 'g')
+    axs[1,1].set_ylabel('CLS validation Loss')
+    axs[1,1].set_xlabel('Epochs')
+    axs[1,1].set_title('validation classification loss')
+
+    axs[1,2].plot(val_box_loss, 'b')
+    axs[1,2].set_ylabel('LCZ validation Loss')
+    axs[1,2].set_xlabel('Epochs')
+    axs[1,2].set_title('validation localization loss')
 
 except KeyError:
-    losses = [loss.detach().numpy() for loss in losses]
+    losses = [loss.detach().numpy() for loss in train_losses]
     plt.plot(losses, 'r')
     plt.xlabel('Epochs')
     plt.ylabel('Total Loss')
