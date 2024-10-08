@@ -123,50 +123,77 @@ if __name__ =='__main__':
         logging('evaluating ...')
         test(cfg, 0, model, test_loader)
     else:
-        total_loss_list = []
-        loss_cls_list = []
-        loss_box_list = []
+        train_total_loss_list = []
+        train_loss_cls_list = []
+        train_loss_box_list = []
+
+        val_total_loss_list = []
+        val_loss_cls_list = []
+        val_loss_box_list = []
+
         score_list = []
 
         for epoch in range(cfg.TRAIN.BEGIN_EPOCH, cfg.TRAIN.END_EPOCH + 1):
             # Adjust learning rate
             lr_new = adjust_learning_rate(optimizer, epoch, cfg)
-            
+
+            # loss initialize
+            # to see loss improvement for each epochs
+            loss_module.reset_meters()
+
             # Train and test model
+
+            ############ training
             logging('training at epoch %d, lr %f' % (epoch, lr_new))
-            loss, loss_cls, loss_box = train(cfg, epoch, model, train_loader, loss_module, optimizer)
+            train_loss, train_loss_cls, train_loss_box = train(cfg, epoch, model, train_loader, loss_module, optimizer)
 
-            loss = convert2cpu(loss)
-            loss_cls = convert2cpu(loss_cls)
-            loss_box = convert2cpu(loss_box)
+            # reload to cpu
+            train_loss = convert2cpu(train_loss)
+            train_loss_cls = convert2cpu(train_loss_cls)
+            train_loss_box = convert2cpu(train_loss_box)
 
-            total_loss_list.append(loss.detach().numpy())
-            loss_cls_list.append(loss_cls.detach().numpy())
-            loss_box_list.append(loss_box.detach().numpy())
+            # loss list 
+            train_total_loss_list.append(train_loss.detach().numpy())
+            train_loss_cls_list.append(train_loss_cls.detach().numpy())
+            train_loss_box_list.append(train_loss_box.detach().numpy())
 
+            ############ validation
             logging('validating at epoch %d' % (epoch))
-            score = test(cfg, epoch, model, test_loader)
-            score_list.append(score)
+            val_loss, val_loss_cls , val_loss_box, fscore = test(cfg, epoch, model, test_loader, loss_module)
+
+            # reload to cpu
+            val_loss = convert2cpu(val_loss)
+            val_loss_cls = convert2cpu(val_loss_cls)
+            val_loss_box = convert2cpu(val_loss_box)
+
+            val_total_loss_list.append(val_loss.detach().numpy())
+            val_loss_cls_list.append(val_loss_cls.detach().numpy())
+            val_loss_box_list.append(val_loss_box.detach().numpy())
+
+            score_list.append(fscore)
 
             # Save the model to backup directory
-            is_best = score > best_score
+            is_best = fscore > best_score
             
             if is_best:
-                print("New best score is achieved: ", score)
+                print("New best score is achieved: ", fscore)
                 print("Previous score was: ", best_score)
-                best_score = score
+                best_score = fscore
 
             state = {
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
                 'score': score_list,
-                'loss': total_loss_list,
-                'cls_loss': loss_cls_list,
-                'box_loss': loss_box_list
+                'train_loss': train_total_loss_list,
+                'train_cls_loss': train_loss_cls_list,
+                'train_box_loss': train_loss_box_list,
+                'val_loss': val_total_loss_list,
+                'val_cls_loss': val_loss_cls_list,
+                'val_box_loss': val_loss_box_list
                 }
 
-            save_checkpoint2(state, is_best, epoch,cfg.TRAIN.END_EPOCH, cfg.BACKUP_DIR, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
+            save_checkpoint2(state, is_best, epoch, cfg.TRAIN.END_EPOCH, cfg.BACKUP_DIR, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
             #save_checkpoint(state, is_best, epoch, backup_dir, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
             #save_checkpoint(state, is_best, epoch,cfg.TRAIN.END_EPOCH, cfg.BACKUP_DIR, cfg.TRAIN.DATASET, cfg.DATA.NUM_FRAMES)
             logging('Weights are saved to backup directory: %s' % (cfg.BACKUP_DIR))
