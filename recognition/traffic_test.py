@@ -17,15 +17,13 @@ from collections import OrderedDict
 # 훈련된 모델의 결과를 확인하기 위한 스크립트
 # ------------------------------------
 # path
-BASE_PTH= "custom_dataset"
-TRAIN_FILE= "custom_dataset/evallist.txt"
-TEST_FILE= "custom_dataset/evallist.txt"
+# BASE_PTH= "custom_dataset"
+# TRAIN_FILE= "custom_dataset/trainlist.txt"
+# TEST_FILE= "custom_dataset/testlist.txt"
 #TEST_VIDEO_FILE= "custom_dataset/trainlist_video.txt"
 
-RESUME_PATH = 'backup/traffic/fourth_train/yowo_traffic_8f_50epochs_best.pth'
+RESUME_PATH = 'backup/traffic/fifth_train/yowo_traffic_8f_3epochs_best.pth'
 IMAGE_PATH = 'custom_dataset/rgb-images'
-
-
 
 
 if __name__ == '__main__':
@@ -37,7 +35,7 @@ if __name__ == '__main__':
     # epoch = 1
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    test_dataset = custom_dataset.Traffic_Dataset(BASE_PTH, TEST_FILE, dataset='traffic',
+    test_dataset = custom_dataset.Traffic_Dataset(cfg.LISTDATA.BASE_PTH, cfg.LISTDATA.TEST_FILE, dataset='traffic',
                         shape=(224, 224),
                         transform=transforms.Compose([transforms.ToTensor()]), 
                         train=False, clip_duration=8, sampling_rate=1)
@@ -76,6 +74,7 @@ if __name__ == '__main__':
 
     try:
         model.load_state_dict(checkpoint['state_dict'])
+        print('===========================================================')
         print("DataPallel model load")
     except RuntimeError:
         new_state_dict = OrderedDict()
@@ -96,7 +95,7 @@ if __name__ == '__main__':
                     return i
 
         # Test parameters
-        nms_thresh    = 0.4
+        nms_thresh    = 0.5
         iou_thresh    = 0.5
         eps           = 1e-5
         num_classes = 8
@@ -115,13 +114,17 @@ if __name__ == '__main__':
         model.eval()
 
         for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
-            imgpath = os.path.join(IMAGE_PATH,frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+            if frame_idx[0][-19] == 'a':
+                imgpath = os.path.join(IMAGE_PATH,frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+            else:
+                imgpath = os.path.join(IMAGE_PATH, '0', frame_idx[0][:-9], frame_idx[0][:-3]+'png')
             print('image_name:', frame_idx[0][:-3])
             #print(os.path.join(IMAGE_PATH,frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png'))
             data = data.to(device)
+
             with torch.no_grad():
                 output = model(data)
-                all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
+                all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 1, 1)
                 # all_boxes = np.array(all_boxes)
                 # print(all_boxes.shape)
                 # [tensor(0.0703), tensor(0.0716), tensor(0.0994), tensor(0.1737), tensor(0.4942), tensor(0.1265), tensor(4),
@@ -130,7 +133,7 @@ if __name__ == '__main__':
                 for i in range(output.size(0)):
                     boxes = all_boxes[i]
                     boxes = nms(boxes, nms_thresh)
-                    # (87, 21) -> boxes shape
+                    # (87, 21) -> boxes shape  *87은 가변적, 21은 불변*
 
                 truths = target[i].view(-1, 5)
                 # total : 전체 sample에 대한 gt값 

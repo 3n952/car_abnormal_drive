@@ -137,12 +137,7 @@ if __name__ =='__main__':
             # Adjust learning rate
             lr_new = adjust_learning_rate(optimizer, epoch, cfg)
 
-            # loss initialize
-            # to see loss improvement for each epochs
-            loss_module.reset_meters()
-
-            # Train and test model
-
+            # Train and test yowo model
             ############ training
             logging('training at epoch %d, lr %f' % (epoch, lr_new))
             train_loss, train_loss_cls, train_loss_box = train(cfg, epoch, model, train_loader, loss_module, optimizer)
