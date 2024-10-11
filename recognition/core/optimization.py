@@ -40,10 +40,11 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         #gradient accumulation 
         
         # total frame 수 // batchsize -> batch 개수 = step 즉, epoch마다 가중치 backprop계산
-        #steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
+        steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
         
-        # 4개 배치마다 gradient calculate
-        steps = 4
+        # 8개 배치마다 gradient calculate
+        # steps = 8
+
         if batch_idx % steps == 0:
             optimizer.step()
             optimizer.zero_grad()
@@ -72,12 +73,12 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
     anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
     num_anchors = cfg.SOLVER.NUM_ANCHORS
     conf_thresh_valid = 0.4
-    # total       = 0.0
-    # proposals   = 0.0
-    # correct     = 0.0
-    # fscore = 0.0
-    #correct_classification = 0.0
-    # total_detected = 0.0
+    total       = 0.0
+    proposals   = 0.0
+    correct     = 0.0
+    fscore = 0.0
+    correct_classification = 0.0
+    total_detected = 0.0
 
     nbatch = len(test_loader)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -88,12 +89,6 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
     l_loader = len(test_loader)
 
     for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
-        #total  = 0.0
-        proposals = 0.0
-        correct = 0.0
-        fscore = 0.0
-        #correct_classification = 0.0
-        total_detected = 0.0
 
         data = data.to(device)
         with torch.no_grad():
@@ -108,7 +103,6 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 boxes = all_boxes[i]
                 boxes = nms(boxes, nms_thresh)
                 # boxes shape = (147 이하 정수, 7) 
-                
 
                 # # nms 결과 box 반환 및 저장
                 # if cfg.TRAIN.DATASET == 'traffic' :
@@ -145,7 +139,7 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 truths = target[i].view(-1, 5)
                 num_gts = truths_length(truths)
         
-                #total = total + num_gts
+                total = total + num_gts
                 pred_list = [] # LIST OF CONFIDENT BOX INDICES
                 for i in range(len(boxes)):
                     # det conf > 0.6
@@ -156,7 +150,7 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 for i in range(num_gts):
                     box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
                     best_iou = 0
-                    best_j = -1
+                    best_j = 0
                     for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
                         iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
                         if iou > best_iou:
@@ -168,19 +162,19 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                         total_detected += 1
                         if int(boxes[best_j][6]) == box_gt[6]:
                             # true positive
-                            #correct_classification += 1
+                            correct_classification += 1
                             correct += 1
 
             #assert num_gts == total_detected + correct 
-            recall= 1.0*correct / (num_gts+eps)
-            precision = 1.0*correct/ (proposals+eps)
+            recall= 1.0*correct / (proposals+eps)
+            precision = 1.0*correct/ (total+eps)
             fscore = 2.0*precision*recall/ (precision+recall+eps)
             logging("[%d/%d]\t precision: %f, recall: %f, fscore: %f" % (batch_idx, nbatch, precision, recall, fscore))
 
-    # classification_accuracy = 1.0 * correct_classification / (total_detected + eps)
-    # localization_recall = 1.0 * total_detected / (total + eps)
+    classification_accuracy = 1.0 * correct_classification / (total_detected + eps)
+    localization_recall = 1.0 * total_detected / (total + eps)
 
-    # print("Classification accuracy: %.3f" % classification_accuracy)
-    # print("Localization recall: %.3f" % localization_recall)
+    print("Classification accuracy: %.3f" % classification_accuracy)
+    print("Localization recall: %.3f" % localization_recall)
 
     return loss, loss_cls , loss_box, fscore

@@ -38,11 +38,14 @@ class FocalLoss(nn.Module):
                 self.alpha = alpha
             else:
                 self.alpha = Variable(alpha)
+
+        #print('alpha = ', self.alpha)
         self.gamma = gamma
         self.class_num = class_num
         self.size_average = size_average
 
     def forward(self, inputs, targets):
+        # targets -> tcls
         N = inputs.size(0)
         #print(N)
         C = inputs.size(1)
@@ -51,12 +54,15 @@ class FocalLoss(nn.Module):
         class_mask = inputs.data.new(N, C).fill_(0)
         class_mask = Variable(class_mask)
         ids = targets.view(-1, 1)
+        #print(f'ids: {ids}')
         class_mask.scatter_(1, ids, 1.)
-        #print(class_mask)
+        #print(f'class_mask: {class_mask}')
         
 
         if inputs.is_cuda and not self.alpha.is_cuda:
             self.alpha = self.alpha.cuda()
+
+        #print(f'alpha: {alpha}')
         alpha = self.alpha[ids.data.view(-1)]
         
         probs = (P*class_mask).sum(1).view(-1,1)
@@ -68,7 +74,6 @@ class FocalLoss(nn.Module):
         batch_loss = -alpha*(torch.pow((1-probs), self.gamma))*log_p 
         #print('-----bacth_loss------')
         #print(batch_loss)
-
         
         if self.size_average:
             loss = batch_loss.mean()
@@ -77,11 +82,10 @@ class FocalLoss(nn.Module):
         return loss
 
         
-
 if __name__ == "__main__":
     alpha = torch.rand(21, 1)
     print(alpha)
-    FL = FocalLoss(class_num=8, gamma=0 )
+    FL = FocalLoss(class_num=2, gamma=0 )
     CE = nn.CrossEntropyLoss()
     N = 4
     C = 5

@@ -179,7 +179,7 @@ def nms(boxes, nms_thresh):
 
     det_confs = torch.zeros(len(boxes))
     for i in range(len(boxes)):
-        det_confs[i] = boxes[i][4]                
+        det_confs[i] = 1 - boxes[i][4]                
 
     _,sortIds = torch.sort(det_confs)
     out_boxes = []

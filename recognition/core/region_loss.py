@@ -68,17 +68,27 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
 
             # bbox_ious is the iou value between prediction and groud truth
             # bbox_ious 반환 shape = (1,245)
+            # 정답과 예측을 비교했을 때 245개의 iou값 (각 앵커와 정답하나 사이에 대한 값 245개)
             cur_ious = torch.max(cur_ious, bbox_ious(cur_pred_boxes, cur_gt_boxes, x1y1x2y2=False))
+            # print(torch.unique(cur_ious))
+            # print(cur_ious.shape)
 
         # if iou > a given threshold, it is seen as it includes an object
         # sil_thresh = 0.60
         # conf_mask_t shape = (1, 245)
         conf_mask_t = conf_mask.view(nB, -1)
 
-        # IOU 비교 시 예측한 위치에 객체가 있다고 판단하는 경우 0을 할당
+        # IOU 비교 시 예측한 위치에 객체가 있다고 판단하는 경우-> gt와 비교한 iou가 threshold 넘은 경우: 0을 할당
         conf_mask_t[b][cur_ious>sil_thresh] = 0
         conf_mask_tt = conf_mask_t[b].view(nA, nH, nW)
-        conf_mask[b] = conf_mask_tt
+
+        # conf_mask[b] shape -> (5,7,7)
+        conf_mask[b] = conf_mask_tt 
+        # conf_mask의 의미: iou가 0.6이상인 box의
+        # print(torch.unique(conf_mask))
+        # print(torch.sum(conf_mask == 0))
+        # print(conf_mask.shape)
+    
 
     # number of ground truth
     nGT = 0
@@ -92,11 +102,12 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
 
             nGT = nGT + 1
             best_iou = 0.0
-            best_n = -1
+            best_n = 0
             # min_dist = 10000
 
             # the values saved in target is ratios
             # times by the width and height of the output feature maps nW and nH
+            # gx, gy range -> 0 ~ 6
             gx = target[b][t*5+1] * nW
             gy = target[b][t*5+2] * nH
             
@@ -127,16 +138,17 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
                 if iou > best_iou:
                     best_iou = iou
                     best_n = n
-            # ㄴ>정답 bbox와 grid별 anchor의 iou값을 계산해서 가장 높은 값을 파악한 결과.
-
+            #   ㄴ>정답 bbox와 grid별 anchor의 iou값을 계산해서 가장 높은 값을 파악한 결과.
+            #print(f'{b}번째 batch에서 {t}번째 정답과 비교했을 때 가장 높은 iou 앵커 인덱스 = {best_n}')
 
             # then we determine the parameters for an anchor (4 values together)
             gt_box = [gx, gy, gw, gh]
 
             # find corresponding prediction box
             # pred boxes has (nB*nA*nH*nW, 4) shape tensor
-            # 예측한 box중 가장 높은 iou를 가진 값 좌표 추출
+            # 가장 높은 iou를 가진 앵커와 같은 위치의 pred box 값 좌표 추출
             pred_box = pred_boxes[b*nAnchors+best_n*nPixels+gj*nW+gi]
+            #print(pred_box)
 
             # only consider the best anchor box, for each image
             # 예측 box grid 좌표 mask에 1 할당
@@ -144,8 +156,10 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             cls_mask[b][best_n][gj][gi] = 1
 
             # in this cell of the output feature map, there exists an object
-            # object scale -> 5
+            # object scale -> 3
             conf_mask[b][best_n][gj][gi] = object_scale
+            #print(torch.sum(conf_mask == 3))
+            #print(f'conf_mask ====\n {torch.unique(conf_mask)}')
             
             # 중심으로 부터 x, y 좌표 거리
             tx[b][best_n][gj][gi] = target[b][t*5+1] * nW - gi
@@ -180,7 +194,7 @@ class RegionLoss(nn.Module):
         self.noobject_scale = cfg.SOLVER.NOOBJECT_SCALE
         self.class_scale    = cfg.SOLVER.CLASS_SCALE
         self.coord_scale    = cfg.SOLVER.COORD_SCALE
-        self.focalloss      = FocalLoss(class_num=self.num_classes, gamma=2, size_average=True)
+        self.focalloss      = FocalLoss(class_num=self.num_classes, gamma=2, size_average=False)
         self.thresh = 0.6
         
 
@@ -226,11 +240,12 @@ class RegionLoss(nn.Module):
 
         # resize the output (all parameters for each anchor can be reached)
         output   = output.view(nB, nA, (5+nC), nH, nW)
+        #print(output.shape)
 
         # anchor's parameter tx
         # gpu mode => x    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([0])).view(nB, nA, nH, nW))
         # cpu mode => x    = torch.sigmoid(output.index_select(2, torch.LongTensor([0])).view(nB, nA, nH, nW))
-        
+      
         x    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([0])).view(nB, nA, nH, nW))
         # anchor's parameter ty
         y    = torch.sigmoid(output.index_select(2, torch.cuda.LongTensor([1])).view(nB, nA, nH, nW))
@@ -306,7 +321,7 @@ class RegionLoss(nn.Module):
         cls_mask = (cls_mask == 1)
 
         #  keep those with high box confidence scores (greater than 0.25) as our final predictions
-        # conf shape 1, 5 ,7, 7
+        # conf shape 8, 5 ,7, 7
         nProposals = int((conf > 0.25).sum().data.item())
 
         tx    = Variable(tx.cuda())
@@ -344,6 +359,8 @@ class RegionLoss(nn.Module):
         loss_h = self.coord_scale * nn.SmoothL1Loss(reduction='sum')(h*coord_mask, th*coord_mask)/2.0
         loss_conf = nn.MSELoss(reduction='sum')(conf*conf_mask, tconf*conf_mask)/2.0
         # try focal loss with gamma = 2
+        #print(f'cls: {cls.shape}')
+        #print(f'tcls: {tcls.shape}')
         loss_cls = self.class_scale * self.focalloss(cls, tcls)
 
         # localization loss
@@ -372,18 +389,20 @@ class RegionLoss(nn.Module):
         #             self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
         #             self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
 
-            # batch 마다 loss 계산 출력
-            print('Epoch: [%d][%d/%d]: training loss - [%f]=======================\npredict: [nGT %d, correct %d, proposals %d],\nloss: [x %.2f(%.2f), '
-                'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), ''cls %.2f(%.2f)]'
-                % (epoch, batch_idx, l_loader, self.l_total.avg, nGT, nCorrect, nProposals, self.l_x.val, self.l_x.avg,
-                    self.l_y.val, self.l_y.avg, self.l_w.val, self.l_w.avg,
-                    self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
-                    self.l_cls.val, self.l_cls.avg))
+            # step마다 결과 출력
+            if batch_idx % 1 == 0:
+                print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
+                    'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), ''cls %.2f(%.2f), total %.2f(%.2f)'
+                    % (epoch, batch_idx, l_loader, nGT, nCorrect, nProposals, self.l_x.val, self.l_x.avg,
+                        self.l_y.val, self.l_y.avg, self.l_w.val, self.l_w.avg,
+                        self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
+                        self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
             
         
 
         else:
             pass
+        
 
         return loss, loss_cls, loss_box
 

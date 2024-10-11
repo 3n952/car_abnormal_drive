@@ -22,7 +22,7 @@ from collections import OrderedDict
 # TEST_FILE= "custom_dataset/testlist.txt"
 #TEST_VIDEO_FILE= "custom_dataset/trainlist_video.txt"
 
-RESUME_PATH = 'backup/traffic/fifth_train/yowo_traffic_8f_3epochs_best.pth'
+RESUME_PATH = 'backup/traffic/seventh_train/yowo_traffic_8f_20epochs_last.pth'
 IMAGE_PATH = 'custom_dataset/rgb-images'
 
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
                         transform=transforms.Compose([transforms.ToTensor()]), 
                         train=False, clip_duration=8, sampling_rate=1)
 
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 1, shuffle=False,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 8, shuffle=True,
                                                 num_workers=8, drop_last=False, pin_memory=True)
 
     # def batch_visualizer(imgpath, x_min, y_min, x_max, y_max, subplot_size = cfg.TRAIN.BATCH_SIZE):
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         nms_thresh    = 0.5
         iou_thresh    = 0.5
         eps           = 1e-5
-        num_classes = 8
+        num_classes = 2
         #anchors = [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
         anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
         num_anchors = 5
@@ -155,13 +155,13 @@ if __name__ == '__main__':
                     box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
                     best_iou = 0
                     best_j = -1
-                    for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
-                        iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
+                    # for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
+                    #     iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
 
-                        # proposal 중 가장 iou 값 높은 예측 박스 index
-                        if iou > best_iou:
-                            best_j = j
-                            best_iou = iou
+                    #     # proposal 중 가장 iou 값 높은 예측 박스 index
+                    #     if iou > best_iou:
+                    #         best_j = j
+                    #         best_iou = iou
 
                     # print(boxes[best_j])
 
@@ -177,9 +177,9 @@ if __name__ == '__main__':
                     cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 1)
 
                     
-                    if best_iou > iou_thresh:
-                        total_detected += 1
-                        print(boxes[best_j])
+                    # if best_iou > iou_thresh:
+                    #     total_detected += 1
+                    #     print(boxes[best_j])
                         # if int(boxes[best_j][6]) == box_gt[6]:
                         #     correct_classification += 1
 

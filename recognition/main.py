@@ -86,7 +86,7 @@ if __name__ =='__main__':
         os.mkdir(cfg.BACKUP_DIR)
 
 
-    ####### Data loader, training scheme and loss function are different for AVA and UCF24/JHMDB21 datasets
+    ####### Data loader, training scheme and loss function 
     # ---------------------------------------------------------------
     # multithread core set
     torch.set_num_threads(cfg.DATA_LOADER.NUM_WORKERS)
@@ -132,6 +132,7 @@ if __name__ =='__main__':
         val_loss_box_list = []
 
         score_list = []
+        best_score = 0
 
         for epoch in range(cfg.TRAIN.BEGIN_EPOCH, cfg.TRAIN.END_EPOCH + 1):
             # Adjust learning rate
@@ -141,6 +142,7 @@ if __name__ =='__main__':
             ############ training
             logging('training at epoch %d, lr %f' % (epoch, lr_new))
             train_loss, train_loss_cls, train_loss_box = train(cfg, epoch, model, train_loader, loss_module, optimizer)
+            #print(train_loss, train_loss_cls, train_loss_box)
 
             # reload to cpu
             train_loss = convert2cpu(train_loss)
@@ -148,9 +150,9 @@ if __name__ =='__main__':
             train_loss_box = convert2cpu(train_loss_box)
 
             # loss list 
-            train_total_loss_list.append(train_loss.detach().numpy())
-            train_loss_cls_list.append(train_loss_cls.detach().numpy())
-            train_loss_box_list.append(train_loss_box.detach().numpy())
+            train_total_loss_list.append(train_loss.item())
+            train_loss_cls_list.append(train_loss_cls.item())
+            train_loss_box_list.append(train_loss_box.item())
 
             ############ validation
             logging('validating at epoch %d' % (epoch))
@@ -161,13 +163,14 @@ if __name__ =='__main__':
             val_loss_cls = convert2cpu(val_loss_cls)
             val_loss_box = convert2cpu(val_loss_box)
 
-            val_total_loss_list.append(val_loss.detach().numpy())
-            val_loss_cls_list.append(val_loss_cls.detach().numpy())
-            val_loss_box_list.append(val_loss_box.detach().numpy())
+            val_total_loss_list.append(val_loss.item())
+            val_loss_cls_list.append(val_loss_cls.item())
+            val_loss_box_list.append(val_loss_box.item())
 
-            score_list.append(fscore)
+            # score_list.append(fscore)
 
             # Save the model to backup directory
+            # fscore_average = sum(score_list) / len(score_list)
             is_best = fscore > best_score
             
             if is_best:
@@ -179,7 +182,7 @@ if __name__ =='__main__':
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
-                'score': score_list,
+                'best_score': best_score,
                 'train_loss': train_total_loss_list,
                 'train_cls_loss': train_loss_cls_list,
                 'train_box_loss': train_loss_box_list,
