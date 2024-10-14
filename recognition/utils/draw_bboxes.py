@@ -70,9 +70,22 @@ if __name__ == '__main__':
     # 'p01_20221224_161010_n5_055_05_0016.txt', 
     # 'p01_20230106_071002_an3_036_07_0004.txt', 
     # 'p01_20221213_105002_n3_007_06_0021.txt')
+    
+    import os
 
-    bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\test_2\detections_2\p01_20221026_183003_n1_003_03_0001.txt'
-    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_1\p02_20221223_123007_an2_011_03_0002.txt'
+    image_base = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\new_dataset\rgb-images'
+    
+    bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_5\p01_20221206_193010_n5_002_06_0002.txt'
+    #bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_3\p02_20221223_123007_an2_011_03_0002.txt'
+
+    # for new_dataset
+    if bbox_path[-19] == '_':
+        image_file = os.path.join(image_base, '0', bbox_path[-38:-10], bbox_path[-38:-5]+'.png')
+    else:
+        image_file = os.path.join(image_base, '1', bbox_path[-38:-10],bbox_path[-38:-5]+'.png')
+    
+    print(f'image path: {image_file}')
+    print(f'label path: {bbox_path}')
 
     #draw_bboxes(image_path, bbox_path)
-    draw_bboxes(image_path, bbox_path2)
+    draw_bboxes(image_path, bbox_path)

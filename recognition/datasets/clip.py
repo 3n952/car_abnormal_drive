@@ -173,34 +173,34 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     ### temporal augmentation, which brings around 1-2 frame       ###
     ### mAP. During test time it is set to cfg.DATA.SAMPLING_RATE. ###
 
-    # d = sampling_rate
+    d = sampling_rate
 
-    # # train시에 d는 1 or 2 sampling / test 시 d=1
-    # if train:
-    #     d = random.randint(1, 2)
+    # train시에 d는 1 or 2 sampling / test 시 d=1
+    if train:
+        d = random.randint(1, 2)
         
-    # #duration = 8
-    # for i in reversed(range(train_dur)):
-    #     # make it as a loop
-    #     i_temp = im_ind - i * d
-    #     if i_temp < 1:
-    #         i_temp = 1
-    #     elif i_temp > max_num:
-    #         i_temp = max_num
+    #duration = 8
+    for i in reversed(range(train_dur)):
+        # make it as a loop
+        i_temp = im_ind - i * d
+        if i_temp < 1:
+            i_temp = 1
+        elif i_temp > max_num:
+            i_temp = max_num
 
-    #     if dataset_use == 'traffic':
-    #         path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-8]}'+'{:04d}.png'.format(i_temp))
-    #     else:
-    #         print('wrong dataset use(make new dataset loader)')
-    
-    for i in range(train_dur):
-        i_temp = im_ind + i
-        if i_temp > max_num:
-            i_temp = max_num - i
-        try:
+        if dataset_use == 'traffic':
             path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-8]}'+'{:04d}.png'.format(i_temp))
-        except:
-            pass
+        else:
+            print('wrong dataset use(make new dataset loader)')
+    
+    # for i in range(train_dur):
+    #     i_temp = im_ind + i
+    #     if i_temp > max_num:
+    #         i_temp = max_num - i
+    #     try:
+    #         path_tmp = os.path.join(base_path, 'rgb-images', im_split[0], im_split[1] ,f'{fname[:-8]}'+'{:04d}.png'.format(i_temp))
+    #     except:
+    #         pass
 
         clip.append(Image.open(path_tmp).convert('RGB'))
 

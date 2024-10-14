@@ -40,7 +40,7 @@ if __name__ == '__main__':
                         transform=transforms.Compose([transforms.ToTensor()]), 
                         train=False, clip_duration=8, sampling_rate=1)
 
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 8, shuffle=True,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 1, shuffle=True,
                                                 num_workers=8, drop_last=False, pin_memory=True)
 
     # def batch_visualizer(imgpath, x_min, y_min, x_max, y_max, subplot_size = cfg.TRAIN.BATCH_SIZE):
@@ -98,7 +98,6 @@ if __name__ == '__main__':
         nms_thresh    = 0.5
         iou_thresh    = 0.5
         eps           = 1e-5
-        num_classes = 2
         #anchors = [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
         anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
         num_anchors = 5
@@ -124,7 +123,7 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 output = model(data)
-                all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 1, 1)
+                all_boxes = get_region_boxes(output, conf_thresh_valid, cfg.MODEL.NUM_CLASSES, anchors, num_anchors, 1, 1)
                 # all_boxes = np.array(all_boxes)
                 # print(all_boxes.shape)
                 # [tensor(0.0703), tensor(0.0716), tensor(0.0994), tensor(0.1737), tensor(0.4942), tensor(0.1265), tensor(4),

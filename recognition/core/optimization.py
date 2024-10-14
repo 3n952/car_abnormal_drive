@@ -104,36 +104,36 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 boxes = nms(boxes, nms_thresh)
                 # boxes shape = (147 이하 정수, 7) 
 
-                # # nms 결과 box 반환 및 저장
-                # if cfg.TRAIN.DATASET == 'traffic' :
-                #     detection_path = os.path.join('custom_detections', 'detections_'+str(epoch), frame_idx[i])
-                #     current_dir = os.path.join('custom_detections', 'detections_'+str(epoch))
-                #     if not os.path.exists('custom_detections'):
-                #         os.mkdir('custom_detections')
-                #     if not os.path.exists(current_dir):
-                #         os.mkdir(current_dir)
-                # else:
-                #     print('wrong directory')
+                # nms 결과 box 반환 및 저장
+                if cfg.TRAIN.DATASET == 'traffic' :
+                    detection_path = os.path.join('custom_detections', 'detections_'+str(epoch), frame_idx[i])
+                    current_dir = os.path.join('custom_detections', 'detections_'+str(epoch))
+                    if not os.path.exists('custom_detections'):
+                        os.mkdir('custom_detections')
+                    if not os.path.exists(current_dir):
+                        os.mkdir(current_dir)
+                else:
+                    print('wrong directory')
 
-                # with open(detection_path, 'w+') as f_detect:
-                #     for box in boxes:
-                #         # 1280 w, 720 h은 해상도에 맞게 조정
-                #         x1 = round(float(box[0]-box[2]/2.0) * 1280.0)
-                #         y1 = round(float(box[1]-box[3]/2.0) * 720.0)
-                #         x2 = round(float(box[0]+box[2]/2.0) * 1280.0)
-                #         y2 = round(float(box[1]+box[3]/2.0) * 720.0)
-                #         det_conf = float(box[4])
+                with open(detection_path, 'w+') as f_detect:
+                    for box in boxes:
+                        # 1280 w, 720 h은 해상도에 맞게 조정
+                        x1 = round(float(box[0]-box[2]/2.0) * 1280.0)
+                        y1 = round(float(box[1]-box[3]/2.0) * 720.0)
+                        x2 = round(float(box[0]+box[2]/2.0) * 1280.0)
+                        y2 = round(float(box[1]+box[3]/2.0) * 720.0)
+                        det_conf = float(box[4])
 
-                #         # for j in range((len(box)-5)//2):
-                #         #     cls_conf = float(box[5+2*j].item())
-                #         #     prob = det_conf * cls_conf
-                #         #     f_detect.write(str(int(box[6])) + ' ' + str(prob) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
+                        for j in range((len(box)-5)//2):
+                            cls_conf = float(box[5+2*j].item())
+                            prob = det_conf * cls_conf
+                            f_detect.write(str(int(box[6])) + ' ' + str(prob) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
 
-                #         cls_conf = float(box[5].item())
-                #         #prob = det_conf * cls_conf
+                        cls_conf = float(box[5].item())
+                        #prob = det_conf * cls_conf
                         
-                #         # 후보 anchor 중에 conf thres 넘는 값이면 추가함
-                #         f_detect.write(str(int(box[6])) + ' ' + str(det_conf) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
+                        # 후보 anchor 중에 conf thres 넘는 값이면 추가함
+                        f_detect.write(str(int(box[6])) + ' ' + str(det_conf) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
                 
                 
                 truths = target[i].view(-1, 5)
