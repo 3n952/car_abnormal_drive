@@ -13,9 +13,9 @@ def load_bbox_annotation(file_path):
             class_id = int(parts[0])
 
             #anchor 확인용
-            #x_min, y_min, x_max, y_max = map(float, parts[1:])
+            x_min, y_min, x_max, y_max = map(float, parts[1:])
 
-            _, x_min, y_min, x_max, y_max = map(float, parts[1:])
+            #_, x_min, y_min, x_max, y_max = map(float, parts[1:])
             
             bboxes.append((class_id, int(x_min), int(y_min), int(x_max), int(y_max)))
 
@@ -39,12 +39,15 @@ def draw_bboxes(image_path, bbox_path):
         class_id, x_min, y_min, x_max, y_max = bbox
 
         #class_id, x_min, y_min, x_max, y_max = bbox
-
-        # 사각형 그리기 (초록색)
-        cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 1)
-        # 클래스 텍스트 표시
-        cv2.putText(image, str(class_id), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 1)
-    
+        if int(class_id) == 0:
+            # 사각형 그리기 (초록색)
+            cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+            # 클래스 텍스트 표시
+            cv2.putText(image, str(class_id), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+        else:
+            cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+            cv2.putText(image, str(class_id), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+        
     # 이미지 출력
     plt.figure(figsize=(10, 10))
     plt.imshow(image)
@@ -54,9 +57,9 @@ def draw_bboxes(image_path, bbox_path):
 if __name__ == '__main__':
 
     # 예시 경로
-    image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\2\p02_20221223_123007_an2_011_03\p02_20221223_123007_an2_011_03_0002.png'   
-    # 실제 이미지 경로
-    image_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\7\p01_20230107_141213_an7_065_04\p01_20230107_141213_an7_065_04_0020.png'
+    # image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\2\p02_20221223_123007_an2_011_03\p02_20221223_123007_an2_011_03_0002.png'   
+    # # 실제 이미지 경로
+    # image_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\7\p01_20230107_141213_an7_065_04\p01_20230107_141213_an7_065_04_0020.png'
 
 
     #bbox_path1 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\yowo_dataset_test\labels\0\p01_20221026_183003_n1_003_03\p01_20221026_183003_n1_003_03_0001.txt'   # 실제 어노테이션 txt 파일 경로
@@ -72,20 +75,21 @@ if __name__ == '__main__':
     # 'p01_20221213_105002_n3_007_06_0021.txt')
     
     import os
-
-    image_base = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\new_dataset\rgb-images'
     
-    bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_5\p01_20221206_193010_n5_002_06_0002.txt'
-    #bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_3\p02_20221223_123007_an2_011_03_0002.txt'
-
+    image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\0\p01_20230102_194004_n7_084_06\p01_20230102_194004_n7_084_06_0036.png'
+    bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\labels\0\p01_20230102_194004_n7_084_06\p01_20230102_194004_n7_084_06_0036.txt'
+    
     # for new_dataset
-    if bbox_path[-19] == '_':
-        image_file = os.path.join(image_base, '0', bbox_path[-38:-10], bbox_path[-38:-5]+'.png')
+    image_base = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\new_dataset\rgb-images'
+    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_10\p01_20221206_193010_n5_009_08_0045.txt'
+    if bbox_path2[-19] == '_':
+        image_file = os.path.join(image_base, '0', bbox_path2[-38:-9], bbox_path2[-38:-4]+'.png')
+        print(image_file)
     else:
-        image_file = os.path.join(image_base, '1', bbox_path[-38:-10],bbox_path[-38:-5]+'.png')
+        image_file = os.path.join(image_base, '1', bbox_path2[-38:-9],bbox_path2[-38:-4]+'.png')
     
-    print(f'image path: {image_file}')
-    print(f'label path: {bbox_path}')
+    # print(f'image path: {image_file}')
+    # print(f'label path: {bbox_path2}')
 
-    #draw_bboxes(image_path, bbox_path)
     draw_bboxes(image_path, bbox_path)
+    #draw_bboxes(image_file, bbox_path)
