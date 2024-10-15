@@ -81,7 +81,7 @@ class YOWO(nn.Module):
 
     def forward(self, input):
         x_3d = input # Input clip
-        x_2d = input[:, :, -1, :, :] # Last frame of the clip that is read
+        x_2d = input[:, :, -1, :, :] # (if first frame of the clip: 0 or last frame of the clip: -1) that is read
 
         x_2d = self.backbone_2d(x_2d)
         x_3d = self.backbone_3d(x_3d)
