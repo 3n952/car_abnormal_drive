@@ -1,0 +1,51 @@
+TRAIN:
+  RESUME_PATH: False
+  DATASET: traffic  
+  BATCH_SIZE: 8
+  TOTAL_BATCH_SIZE: 335
+  LEARNING_RATE: 1e-4
+  EVALUATE: False
+  FINE_TUNE: False
+  BEGIN_EPOCH: 1
+  END_EPOCH: 50
+SOLVER:
+  MOMENTUM: 0.9
+  WEIGHT_DECAY: 5e-4
+  STEPS: [3, 4, 5, 6]
+  LR_DECAY_RATE: 0.5
+  # *3
+  ANCHORS: [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
+  NUM_ANCHORS: 5
+  OBJECT_SCALE: 5
+  NOOBJECT_SCALE: 1
+  CLASS_SCALE: 1
+  COORD_SCALE: 1
+DATA:
+  NUM_FRAMES: 8
+  SAMPLING_RATE: 1
+  TRAIN_JITTER_SCALES: [256, 320]
+  TRAIN_CROP_SIZE: 224
+  TEST_CROP_SIZE: 224
+  MEAN: [0.4345, 0.4051, 0.3775]
+  STD: [0.2768, 0.2713, 0.2737]
+MODEL:
+  NUM_CLASSES: 2
+  BACKBONE_3D: resnext101
+  BACKBONE_2D: darknet
+WEIGHTS:
+  # BACKBONE_3D: "weights/resnet-34-kinetics-cpu.pth"
+  BACKBONE_3D: False
+  # BACKBONE_2D: "weights/yolo.weights"
+  BACKBONE_2D: False
+  FREEZE_BACKBONE_3D: False
+  FREEZE_BACKBONE_2D: False
+LISTDATA:
+  BASE_PTH: "new_dataset"
+  TRAIN_FILE: "new_dataset/trainlist.txt"
+  TEST_FILE: "new_dataset/testlist.txt"
+  #TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
+  MAX_OBJS: 10
+  CLASS_NAMES: ["정상", "비정상"]
+
+BACKUP_DIR: "backup/traffic"
+RNG_SEED: 1
