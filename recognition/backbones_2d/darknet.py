@@ -2,7 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from core.region_loss import RegionLoss
+#from core.region_loss import RegionLoss
+import sys
+import os
+# parent package 참조 import
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from cfg.yolo_cfg import *
 #from layers.batchnorm.bn import BN2d
 
@@ -316,7 +320,7 @@ class Darknet(nn.Module):
 if __name__ == "__main__":
     model = Darknet("cfg/yolo.cfg").cuda()
     print(model)
-    model.load_weights("yolo.weights")
-    data = torch.randn(24, 3, 224, 224).cuda()
-    output = model(data)
-    print(output.size())
+    # model.load_weights("yolo.weights")
+    # data = torch.randn(24, 3, 224, 224).cuda()
+    # output = model(data)
+    # print(output.size())
