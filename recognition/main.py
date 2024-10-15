@@ -133,6 +133,7 @@ if __name__ =='__main__':
 
         score_list = []
         best_score = 0
+        best_loss = 99999
 
         for epoch in range(cfg.TRAIN.BEGIN_EPOCH, cfg.TRAIN.END_EPOCH + 1):
             # Adjust learning rate
@@ -171,11 +172,13 @@ if __name__ =='__main__':
 
             # Save the model to backup directory
             # fscore_average = sum(score_list) / len(score_list)
-            is_best = fscore > best_score
+            #is_best = fscore > best_score
+            is_best = val_loss < best_loss
             
             if is_best:
                 print("New best score is achieved: ", fscore)
                 print("Previous score was: ", best_score)
+                best_loss = val_loss
                 best_score = fscore
 
             state = {

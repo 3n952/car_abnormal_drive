@@ -22,7 +22,7 @@ from collections import OrderedDict
 # TEST_FILE= "custom_dataset/testlist.txt"
 #TEST_VIDEO_FILE= "custom_dataset/trainlist_video.txt"
 
-RESUME_PATH = 'backup/traffic/seventh_train/yowo_traffic_8f_20epochs_last.pth'
+RESUME_PATH = 'backup/traffic/third_train/yowo_traffic_8f_16epochs_best.pth'
 IMAGE_PATH = 'custom_dataset/rgb-images'
 
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
                 imgpath = os.path.join(IMAGE_PATH,frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png')
             else:
                 imgpath = os.path.join(IMAGE_PATH, '0', frame_idx[0][:-9], frame_idx[0][:-3]+'png')
-            print('image_name:', frame_idx[0][:-3])
+            print('image_name:', frame_idx[0][:-4])
             #print(os.path.join(IMAGE_PATH,frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png'))
             data = data.to(device)
 
@@ -136,6 +136,7 @@ if __name__ == '__main__':
 
                 truths = target[i].view(-1, 5)
                 # total : 전체 sample에 대한 gt값 
+                #print('t:', truths)
                 num_gts = truths_length(truths)
                 total = total + num_gts
                 pred_list = [] # LIST OF CONFIDENT BOX INDICES
@@ -153,14 +154,14 @@ if __name__ == '__main__':
                 for i in range(num_gts):
                     box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
                     best_iou = 0
-                    best_j = -1
-                    # for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
-                    #     iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
+                    best_j = 0
+                    for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
+                        iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
 
-                    #     # proposal 중 가장 iou 값 높은 예측 박스 index
-                    #     if iou > best_iou:
-                    #         best_j = j
-                    #         best_iou = iou
+                        # proposal 중 가장 iou 값 높은 예측 박스 index
+                        if iou > best_iou:
+                            best_j = j
+                            best_iou = iou
 
                     # print(boxes[best_j])
 
@@ -172,8 +173,12 @@ if __name__ == '__main__':
                     y_max = round(float(cy + ch / 2.0) * 720.0)
 
                     # bbox 
-                    cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 1)
-                    cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 1)
+                    if int(cls.item()) == 0:
+                        cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                        cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                    else:
+                        cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+                        cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
 
                     
                     # if best_iou > iou_thresh:
