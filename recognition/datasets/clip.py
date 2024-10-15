@@ -9,7 +9,6 @@ from core.utils import *
 import cv2
 
 
-
 def scale_image_channel(im, c, v):
     cs = list(im.split())
     cs[c] = cs[c].point(lambda i: i * v)
@@ -176,8 +175,8 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     d = sampling_rate
 
     # train시에 d는 1 or 2 sampling / test 시 d=1
-    if train:
-        d = random.randint(1, 2)
+    # if train:
+    #     d = random.randint(1, 2)
         
     #duration = 8
     for i in reversed(range(train_dur)):
