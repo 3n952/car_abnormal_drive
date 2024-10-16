@@ -279,7 +279,7 @@ def get_clip(root, imgpath, train_dur, num_samples):
         if i_temp > max_num:
             i_temp = max_num
 
-        path_tmp = os.path.join(base_path, 'rgb-images', im_split[6], im_split[7] ,'{:05d}.jpg'.format(i_temp))
+        path_tmp = os.path.join(base_path, 'rgb-images', im_split[6], im_split[7] ,'{:05d}.png'.format(i_temp))
         
         clip.append(Image.open(path_tmp).convert('RGB'))
 
