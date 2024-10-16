@@ -22,7 +22,7 @@ from collections import OrderedDict
 # TEST_FILE= "custom_dataset/testlist.txt"
 #TEST_VIDEO_FILE= "custom_dataset/trainlist_video.txt"
 
-RESUME_PATH = 'backup/traffic/third_train/yowo_traffic_8f_16epochs_best.pth'
+RESUME_PATH = 'backup/traffic/new_train2/yowo_traffic_8f_1epochs_checkpoint.pth'
 IMAGE_PATH = 'custom_dataset/rgb-images'
 
 
