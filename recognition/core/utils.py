@@ -32,11 +32,11 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def save_checkpoint(state, is_best, epoch, end_epoch, directory, dataset, clip_duration):
-    torch.save(state, '%s/%s_checkpoint.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'))
+def save_checkpoint(state, is_best, epoch, directory, dataset, clip_duration):
+    torch.save(state, '%s/%s_checkpoint.pth' % (directory,'yowo_' + dataset + '_' + str(clip_duration) + 'f_' + str(epoch)+'epochs'))
     #torch.save(state, '%s/%s_checkpoint.pth' % (directory, str(epoch)+'epochs'))
     if is_best:
-        shutil.copyfile('%s/%s_checkpoint.pth' % (directory, 'yowo_' + dataset + '_' + str(clip_duration) + 'f' + str(epoch)+'epochs'),
+        shutil.copyfile('%s/%s_checkpoint.pth' % (directory, 'yowo_' + dataset + '_' + str(clip_duration) + 'f_' + str(epoch)+'epochs'),
                         '%s/%s_best.pth' % (directory, 'yowo_' + dataset + '_' + str(clip_duration) + 'f'))
         # shutil.copyfile('%s/%s_checkpoint.pth' % (directory, str(epoch)+'epochs'),
         #                 '%s/%s_best.pth' % (directory, 'yowo_' + dataset))
@@ -407,75 +407,6 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
         print('      boxes filter : %f' % (t3-t2))
         print('---------------------------------')
     return all_boxes
-
-
-def get_region_boxes_ava(output, conf_thresh, num_classes, anchors, num_anchors, only_objectness=1, validation=False):
-    anchor_step = len(anchors)//num_anchors
-    if output.dim() == 3:
-        output = output.unsqueeze(0)
-    batch = output.size(0)
-    assert(output.size(1) == (5+num_classes)*num_anchors)
-    h = output.size(2)
-    w = output.size(3)
-
-    t0 = time.time()
-    all_boxes = []
-    output = output.view(batch*num_anchors, 5+num_classes, h*w).transpose(0,1).contiguous().view(5+num_classes, batch*num_anchors*h*w)
-
-    grid_x = torch.linspace(0, w-1, w).repeat(h,1).repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cuda()
-    grid_y = torch.linspace(0, h-1, h).repeat(w,1).t().repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cuda()
-    xs = torch.sigmoid(output[0]) + grid_x
-    ys = torch.sigmoid(output[1]) + grid_y
-
-    anchor_w = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([0]))
-    anchor_h = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([1]))
-    anchor_w = anchor_w.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
-    anchor_h = anchor_h.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
-    ws = torch.exp(output[2]) * anchor_w
-    hs = torch.exp(output[3]) * anchor_h
-
-    det_confs = torch.sigmoid(output[4])
-
-    pose_cls_confs = torch.nn.Softmax()(Variable(output[5:5+14].transpose(0,1))).data  ############## MODIFICATION
-    act_cls_confs = torch.sigmoid(Variable(output[5+14:5+num_classes].transpose(0,1))).data  ############## MODIFICATION
-    cls_confs = torch.cat([pose_cls_confs, act_cls_confs], dim=1)
-    t1 = time.time()
-    
-    sz_hw = h*w
-    sz_hwa = sz_hw*num_anchors
-    det_confs = convert2cpu(det_confs)
-    xs = convert2cpu(xs)
-    ys = convert2cpu(ys)
-    ws = convert2cpu(ws)
-    hs = convert2cpu(hs)
-    if validation:
-        cls_confs = convert2cpu(cls_confs.view(-1, num_classes))
-    t2 = time.time()
-    for b in range(batch):
-        boxes = []
-        for cy in range(h):
-            for cx in range(w):
-                for i in range(num_anchors):
-                    ind = b*sz_hwa + i*sz_hw + cy*w + cx
-                    det_conf =  det_confs[ind]
-                    if det_conf > conf_thresh:  ############## MODIFICATION
-                        bcx = xs[ind]
-                        bcy = ys[ind]
-                        bw = ws[ind]
-                        bh = hs[ind]
-                        cls_conf = cls_confs[ind]
-                        box = [bcx/w, bcy/h, bw/w, bh/h, det_conf, cls_conf]
-                        boxes.append(box)
-        all_boxes.append(boxes)
-    t3 = time.time()
-    if False:
-        print('---------------------------------')
-        print('matrix computation : %f' % (t1-t0))
-        print('        gpu to cpu : %f' % (t2-t1))
-        print('      boxes filter : %f' % (t3-t2))
-        print('---------------------------------')
-    return all_boxes
-
 
 def get_region_boxes_video(output, conf_thresh, num_classes, anchors, num_anchors, only_objectness=1, validation=False):
     anchor_step = len(anchors)//num_anchors

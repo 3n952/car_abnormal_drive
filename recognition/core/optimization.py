@@ -43,9 +43,12 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
         
         # 8개 배치마다 gradient calculate
-        # steps = 8
 
-        if batch_idx % steps == 0:
+        if batch_idx == 0:
+            pass
+
+        elif batch_idx % steps == 0:
+            #print('optimization')
             optimizer.step()
             optimizer.zero_grad()
 
@@ -80,6 +83,8 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
 
     correct_classification = 0.0
     total_detected = 0.0
+    fn_detected = 0.0
+    fp_detected = 0.0
 
     nbatch = len(test_loader)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -106,35 +111,35 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 # boxes shape = (147 이하 정수, 7) 
 
                 # nms 결과 box 반환 및 저장
-                # if cfg.TRAIN.DATASET == 'traffic' :
-                #     detection_path = os.path.join('custom_detections', 'detections_'+str(epoch), frame_idx[i])
-                #     current_dir = os.path.join('custom_detections', 'detections_'+str(epoch))
-                #     if not os.path.exists('custom_detections'):
-                #         os.mkdir('custom_detections')
-                #     if not os.path.exists(current_dir):
-                #         os.mkdir(current_dir)
-                # else:
-                #     print('wrong directory')
+                if cfg.TRAIN.DATASET == 'traffic' :
+                    detection_path = os.path.join('custom_detections', 'detections_'+str(epoch), frame_idx[i])
+                    current_dir = os.path.join('custom_detections', 'detections_'+str(epoch))
+                    if not os.path.exists('custom_detections'):
+                        os.mkdir('custom_detections')
+                    if not os.path.exists(current_dir):
+                        os.mkdir(current_dir)
+                else:
+                    print('wrong directory')
 
-                # with open(detection_path, 'w+') as f_detect:
-                #     for box in boxes:
-                #         # 1280 w, 720 h은 해상도에 맞게 조정
-                #         x1 = round(float(box[0]-box[2]/2.0) * 1280.0)
-                #         y1 = round(float(box[1]-box[3]/2.0) * 720.0)
-                #         x2 = round(float(box[0]+box[2]/2.0) * 1280.0)
-                #         y2 = round(float(box[1]+box[3]/2.0) * 720.0)
-                #         det_conf = float(box[4])
+                with open(detection_path, 'w+') as f_detect:
+                    for box in boxes:
+                        # 1280 w, 720 h은 해상도에 맞게 조정
+                        x1 = round(float(box[0]-box[2]/2.0) * 1280.0)
+                        y1 = round(float(box[1]-box[3]/2.0) * 720.0)
+                        x2 = round(float(box[0]+box[2]/2.0) * 1280.0)
+                        y2 = round(float(box[1]+box[3]/2.0) * 720.0)
+                        det_conf = float(box[4])
 
-                #         for j in range((len(box)-5)//2):
-                #             cls_conf = float(box[5+2*j].item())
-                #             prob = det_conf * cls_conf
-                #             f_detect.write(str(int(box[6])) + ' ' + str(prob) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
+                        for j in range((len(box)-5)//2):
+                            cls_conf = float(box[5+2*j].item())
+                            prob = det_conf * cls_conf
+                            f_detect.write(str(int(box[6])) + ' ' + str(prob) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
 
-                #         cls_conf = float(box[5].item())
-                #         #prob = det_conf * cls_conf
+                        cls_conf = float(box[5].item())
+                        #prob = det_conf * cls_conf
                         
-                #         # 후보 anchor 중에 conf thres 넘는 값이면 추가함
-                #         f_detect.write(str(int(box[6])) + ' ' + str(det_conf) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
+                        # 후보 anchor 중에 conf thres 넘는 값이면 추가함
+                        f_detect.write(str(int(box[6])) + ' ' + str(det_conf) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
                 
                 
                 truths = target[i].view(-1, 5)
@@ -143,15 +148,15 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 total = total + num_gts
                 pred_list = [] # LIST OF CONFIDENT BOX INDICES
                 for i in range(len(boxes)):
-                    # det conf > 0.6
-                    if boxes[i][4] > 0.6:
+                    # det conf > 0.25
+                    if boxes[i][4] > 0.25:
                         proposals = proposals+1
                         pred_list.append(i)
 
                 for i in range(num_gts):
                     box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
                     best_iou = 0
-                    best_j = 0
+                    best_j = -1
                     for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
                         iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
                         if iou > best_iou:
@@ -159,16 +164,25 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                             best_iou = iou
 
                     if best_iou > iou_thresh:
-                        # tp+false positive
+                        # tp
                         total_detected += 1
                         if int(boxes[best_j][6]) == box_gt[6]:
                             # true positive
                             correct_classification += 1
                             correct += 1
+                    else:
+                        #fp
+                        fp_detected += 1
+
+            fn_detected = total - total_detected
 
             #assert num_gts == total_detected + correct 
-            recall= 1.0*correct / (proposals+eps)
-            precision = 1.0*correct/ (total+eps)
+            precision = 1.0 * total_detected / (total_detected + fp_detected)
+            recall = 1.0 * total_detected / (total_detected + fn_detected)
+            # precision= 1.0*correct / (proposals+eps)
+            # recall = 1.0*correct/ (total+eps)
+
+            # fscore 대신 mAP적용해보기 (미완)
             fscore = 2.0*precision*recall/ (precision+recall+eps)
             logging("[%d/%d]\t precision: %f, recall: %f, fscore: %f" % (batch_idx, nbatch, precision, recall, fscore))
 
