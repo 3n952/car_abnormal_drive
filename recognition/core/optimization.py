@@ -9,7 +9,7 @@ from core.utils import *
 
 def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
     t0 = time.time()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # loss initialize
     # to see loss improvement for each epochs
@@ -25,7 +25,7 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         # print(f'=================={batch_idx + 1} 번째 batch의 input key frame ============================')
         # print(fname)
 
-        data = data.to(device)
+        data = data.cuda()
         output = model(data)
         loss, loss_cls, loss_box = loss_module(output, target, epoch, batch_idx, l_loader, 1)
     
@@ -41,16 +41,19 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         
         # total frame 수 // batchsize -> batch 개수 = step 즉, epoch마다 가중치 backprop계산
         steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
-        
-        # 8개 배치마다 gradient calculate
-
-        if batch_idx == 0:
-            pass
-
-        elif batch_idx % steps == 0:
-            print('gradient accumulation')
+        if batch_idx % steps == 0:
             optimizer.step()
             optimizer.zero_grad()
+        
+        
+        # 8개 배치마다 gradient calculate
+        # if batch_idx == 0:
+        #     pass
+
+        # elif batch_idx % steps == 0:
+        #     print('gradient accumulation')
+        #     optimizer.step()
+        #     optimizer.zero_grad()
 
     t1 = time.time()
     logging('trained with %f samples in %d seconds' % (len(train_loader.dataset), (t1-t0)))

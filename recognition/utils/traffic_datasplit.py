@@ -10,7 +10,7 @@ import random
 
 from data_filter import dataset_filter
 
-# train - 0, val - 1, test - 2
+
 def mk_splitfiles(root_dir, split_dir, is_train = True):
 
     for d1 in tqdm.tqdm(os.listdir(root_dir)):
