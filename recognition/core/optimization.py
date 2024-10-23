@@ -48,7 +48,7 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
             pass
 
         elif batch_idx % steps == 0:
-            #print('optimization')
+            print('gradient accumulation')
             optimizer.step()
             optimizer.zero_grad()
 
