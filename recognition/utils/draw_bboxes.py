@@ -81,7 +81,7 @@ if __name__ == '__main__':
     
     # for new_dataset
     image_base = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\new_dataset\rgb-images'
-    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\detections_10\p01_20221206_193010_n5_009_08_0045.txt'
+    bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\new_train1\detections_1\p01_20221206_193010_n5_002_06_0002.txt'
     if bbox_path2[-19] == '_':
         image_file = os.path.join(image_base, '0', bbox_path2[-38:-9], bbox_path2[-38:-4]+'.png')
         print(image_file)
@@ -91,5 +91,5 @@ if __name__ == '__main__':
     # print(f'image path: {image_file}')
     # print(f'label path: {bbox_path2}')
 
-    draw_bboxes(image_path, bbox_path)
-    #draw_bboxes(image_file, bbox_path)
+    #draw_bboxes(image_path, bbox_path)
+    draw_bboxes(image_file, bbox_path2)

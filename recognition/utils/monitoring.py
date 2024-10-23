@@ -7,8 +7,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.utils import *
 
-
-checkpoint_path = 'backup/traffic/third_train/yowo_traffic_8f_16epochs_best.pth'
+checkpoint_path = 'backup/traffic/train1/yowo_traffic_8f_best.pth'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 checkpoint = torch.load(checkpoint_path, map_location =device)
