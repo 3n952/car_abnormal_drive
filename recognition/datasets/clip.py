@@ -182,8 +182,8 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     for i in reversed(range(train_dur)):
         # make it as a loop
         i_temp = im_ind - i * d
-        if i_temp < im_ind:
-            i_temp = im_ind
+        if i_temp < 1:
+            i_temp = 1
         elif i_temp > max_num:
             i_temp = max_num
 
