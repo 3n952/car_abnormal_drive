@@ -91,39 +91,85 @@ def mk_splitfiles(root_dir, split_dir, is_train = True):
                     with open(os.path.join(split_dir,'testlist.txt'), 'a') as v:
                         v.writelines(f'{d1}/{d2}/{d3[:-3]}txt\n')
 
-# def rename_files_in_directory(directory):
-#     # 파일명에서 숫자를 추출하기 위한 정규 표현식
-#     pattern = re.compile(r'p02_(\d{4})\.png')
-    
-#     # 디렉토리 안의 파일 목록 가져오기
-#     files = os.listdir(directory)
-#     last_part = files.split('_')[-1]
+def rename_files_in_directory(directory):
+    delete_list = []
 
-#     # 이미지 파일 목록에서 숫자 추출 및 정렬
-#     file_numbers = []
-#     for file in files:
-#         match = pattern.match(file)
-#         if match:
-#             file_numbers.append(int(match.group(1)))
+    # img_dir = 'dataset/rgb-images'
+    for img_dir in os.listdir(directory):
+        drivingtype_dir = os.path.join(directory, img_dir)
+        for img_dir2 in os.listdir(drivingtype_dir):
+            # mov_dir = rgb-image/0/영상단위디렉
+            mov_dir = os.path.join(drivingtype_dir, img_dir2)
+            #fname - frame단위 이미지 데이터 접근
+            file_numbers = []
 
-#     # 숫자 순으로 정렬
-#     file_numbers.sort()
+            for fname in os.listdir(mov_dir):
 
-#     # 연속적인지 확인
-#     if all(file_numbers[i] + 1 == file_numbers[i + 1] for i in range(len(file_numbers) - 1)):
-#         print("숫자가 연속적입니다.")
-#         # 파일명을 순서대로 0001, 0002, ... 형식으로 변경
-#         for i, number in enumerate(file_numbers):
-#             old_name = f"p02_{number:04d}.png"
-#             new_name = f"p02_{i + 1:04d}.png"
-#             os.rename(os.path.join(directory, old_name), os.path.join(directory, new_name))
-#             print(f"Renamed {old_name} to {new_name}")
-#     else:
-#         print("숫자가 연속적이지 않습니다.")
+                # if_number_one = re.compile(r'.*_0001.txt')
+                # if_match = if_number_one.match(fname)
+                # if if_match:
+                #     print(f'{fname} is passed')
+                #     break
 
-# # 디렉토리 경로 지정
-# directory_path = "/path/to/your/directory"
-# rename_files_in_directory(directory_path)
+                # 파일명에서 숫자를 추출하기 위한 정규 표현식
+                pattern = re.compile(r'.*_(\d{4})\.txt')
+
+                # 이미지 파일 목록에서 숫자 추출 및 정렬
+                match = pattern.match(fname)
+                if match:
+                    file_numbers.append(int(match.group(1)))
+
+            # 숫자 순으로 정렬
+            file_numbers.sort()
+            #print(file_numbers)
+
+            # 연속적인지 확인
+            if all(file_numbers[i] + 1 == file_numbers[i + 1] for i in range(len(file_numbers) - 1)):
+                #print("숫자가 연속적입니다.")
+                # 파일명을 순서대로 0001, 0002, ... 형식으로 변경
+                for i, number in enumerate(file_numbers):
+                    # print(number)
+                    # print('++++++++++++++++++++renaming+++++++++++++++++++++++')
+                    old_name = fname[:-8]+f"{number:04d}.txt"
+                    new_name = fname[:-8]+f"{i + 1:04d}.txt"
+                    os.rename(os.path.join(mov_dir, old_name), os.path.join(mov_dir, new_name))
+                    #print(f"Renamed {old_name} to {new_name}")
+            else:
+                delete_list.append(fname)
+
+    if delete_list == []:
+        print('completed')            
+    else:
+        print('files to delete: ',len(delete_list))
+        print(delete_list)
+
+
+def check_in_sequence(directory):
+    print('====check if file"s name in sequence=======')
+      # img_dir = 'dataset/rgb-images'
+    for img_dir in os.listdir(directory):
+        drivingtype_dir = os.path.join(directory, img_dir)
+        for img_dir2 in os.listdir(drivingtype_dir):
+            # mov_dir = rgb-image/0/영상단위디렉
+            mov_dir = os.path.join(drivingtype_dir, img_dir2)
+            #fname - frame단위 이미지 데이터 접근
+            # 디렉토리 안의 모든 파일 가져오기
+            files = [f for f in os.listdir(mov_dir) if f.endswith('.txt')]
+            
+            # 파일 이름을 숫자로 정렬
+            files.sort(key=lambda f: int(f.split('_')[-1][-8:-4]))
+
+            # 파일 이름을 순차적으로 다시 붙이기
+            for i, file in enumerate(files):
+                #print(file)
+                new_name = file[:-8]+f"{i + 1:04d}.txt"  
+                old_path = os.path.join(mov_dir, file)
+                new_path = os.path.join(mov_dir, new_name)
+                #print(old_path,'->', new_path)
+                
+                # 파일 이름 변경
+                os.rename(old_path, new_path)
+                # print(f"Renamed: {file} -> {new_name}")
 
                     
 
@@ -134,13 +180,20 @@ if __name__ == '__main__':
     dst_img_dir = r'D:\last_dataset\rgb-images'
     dst_label_dir = r'D:\last_dataset\labels'
 
-    make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir)
+    # make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir)
 
-    root_dir = r'D:\last_dataset\rgb-images'
-    split_dir = r'D:\last_dataset'
+    # root_dir = r'D:\last_dataset\rgb-images'
+    # split_dir = r'D:\last_dataset'
 
-    mk_splitfiles(root_dir=root_dir, split_dir=split_dir)
+    # mk_splitfiles(root_dir=root_dir, split_dir=split_dir)
 
-    train_list = r'D:\last_dataset\trainlist.txt'
-    test_list = r'D:\last_dataset\testlist.txt'
-    random_split(train_list, train_list, test_list)
+    # train_list = r'D:\last_dataset\trainlist.txt'
+    # test_list = r'D:\last_dataset\testlist.txt'
+    # random_split(train_list, train_list, test_list)
+    
+
+    # rename_files_in_directory(dst_img_dir)
+    # check_in_sequence(dst_img_dir)
+
+    rename_files_in_directory(dst_label_dir)
+    #check_in_sequence(dst_label_dir)
