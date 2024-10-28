@@ -39,9 +39,9 @@ if not os.path.exists(cfg.BACKUP_DIR):
 if __name__ =='__main__':
     ####### Create model
     # ---------------------------------------------------------------
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = YOWO(cfg)
-    model = model.to(device)
+    model = model.cuda()
     # model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
     # print(model)
     pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -110,7 +110,7 @@ if __name__ =='__main__':
     test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.BATCH_SIZE, shuffle=False,
                                                 num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=False, pin_memory=True)
 
-    loss_module   = RegionLoss(cfg).to(device)
+    loss_module   = RegionLoss(cfg).cuda()
 
     # 임포트 모듈 중 train_traffic, test_traffic 가져오기 opimization.py참고
     train = getattr(sys.modules[__name__], 'train_traffic')

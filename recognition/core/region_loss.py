@@ -2,7 +2,7 @@ import time
 import json
 import torch
 import torch.nn.functional as F
-
+from builtins import range as xrange
 import math
 import torch.nn as nn
 from torch.autograd import Variable
@@ -37,7 +37,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     nPixels  = nH*nW
 
     # for each image
-    for b in range(nB):
+    for b in xrange(nB):
         # get all anchor boxes in one image
         # (4 * nAnchors)
 
@@ -53,7 +53,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             # this loop is for anchors in each image
             # for each anchor 5 parameters are available (class, x, y, w, h)
 
-        for t in range(40):
+        for t in xrange(40):
             # 실제로 라벨링 되어 있지 않은 값 예외처리
             if target[b][t*5+1] == 0:
                 break
@@ -93,16 +93,16 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
     # number of ground truth
     nGT = 0
     nCorrect = 0
-    for b in range(nB):
+    for b in xrange(nB):
         # anchors for one batch (at least batch size, and for some specific classes, there might exist more than one anchor)
-        for t in range(40):
+        for t in xrange(40):
             # 객체 없는 경우 break
             if target[b][t*5+1] == 0:
                 break
 
             nGT = nGT + 1
             best_iou = 0.0
-            best_n = 0
+            best_n = -1
             # min_dist = 10000
 
             # the values saved in target is ratios
@@ -126,7 +126,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             gh = target[b][t*5+4] * nH
             gt_box = [0, 0, gw, gh]
 
-            for n in range(nA):
+            for n in xrange(nA):
                 # get anchor parameters (2 values) anchor step = 2
                 aw = anchors[anchor_step*n]
                 ah = anchors[anchor_step*n+1]
@@ -165,9 +165,13 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             tx[b][best_n][gj][gi] = target[b][t*5+1] * nW - gi
             ty[b][best_n][gj][gi] = target[b][t*5+2] * nH - gj
             
-            tw[b][best_n][gj][gi] = math.log(gw/anchors[anchor_step*best_n])
-            th[b][best_n][gj][gi] = math.log(gh/anchors[anchor_step*best_n+1])
-            iou = bbox_iou(gt_box, pred_box, x1y1x2y2=False) # best_iou
+            try:
+                tw[b][best_n][gj][gi] = math.log(gw/anchors[anchor_step*best_n])
+                th[b][best_n][gj][gi] = math.log(gh/anchors[anchor_step*best_n+1])
+                iou = bbox_iou(gt_box, pred_box, x1y1x2y2=False) # best_iou
+            except ValueError:
+                print(f"gw: {gw}, anchor: {anchors[anchor_step * best_n]}")
+
 
             # confidence equals to iou of the corresponding anchor
             tconf[b][best_n][gj][gi] = iou
@@ -389,7 +393,7 @@ class RegionLoss(nn.Module):
         #             self.l_h.val, self.l_h.avg, self.l_conf.val, self.l_conf.avg,
         #             self.l_cls.val, self.l_cls.avg, self.l_total.val, self.l_total.avg))
 
-            # step마다 결과 출력
+            # step마다 결과 출력(매 배치마다 결과 출력해서 loss가 잘 수렴하는지 확인하기.)
             if batch_idx % 1 == 0:
                 print('Epoch: [%d][%d/%d]:\t nGT %d, correct %d, proposals %d, loss: x %.2f(%.2f), '
                     'y %.2f(%.2f), w %.2f(%.2f), h %.2f(%.2f), conf %.2f(%.2f), ''cls %.2f(%.2f), total %.2f(%.2f)'

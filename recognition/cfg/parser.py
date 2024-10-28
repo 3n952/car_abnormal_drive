@@ -28,7 +28,7 @@ def parse_args():
     )
     parser.add_argument( # added for now
         '--dataset',
-        default='ucf101-24', 
+        default='traffic', 
         type=str, 
         help='Select dataset from (ucf101-24, jhmdb-21, ava or custom)'
     )

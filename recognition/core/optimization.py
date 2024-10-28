@@ -40,20 +40,25 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
         #gradient accumulation 
         
         # total frame 수 // batchsize -> batch 개수 = step 즉, epoch마다 가중치 backprop계산
-        steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
-        if batch_idx % steps == 0:
-            optimizer.step()
-            optimizer.zero_grad()
-        
-        
-        # 8개 배치마다 gradient calculate
-        # if batch_idx == 0:
-        #     pass
-
-        # elif batch_idx % steps == 0:
-        #     print('gradient accumulation')
+        #steps = cfg.TRAIN.TOTAL_BATCH_SIZE // cfg.TRAIN.BATCH_SIZE
+        # if batch_idx % steps == 0:
         #     optimizer.step()
         #     optimizer.zero_grad()
+        
+        steps = 20
+    
+        # save result every 1000 batches
+        if batch_idx % 1000 == 0: # From time to time, reset averagemeters to see improvements
+            loss_module.reset_meters()
+        
+        # 8개 배치마다 gradient calculate
+        if batch_idx == 0:
+            print('gradient accumulation start')
+            pass
+        elif batch_idx % steps == 0:
+            optimizer.step()
+            optimizer.zero_grad()
+
 
     t1 = time.time()
     logging('trained with %f samples in %d seconds' % (len(train_loader.dataset), (t1-t0)))
@@ -90,7 +95,7 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
     fp_detected = 0.0
 
     nbatch = len(test_loader)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.eval()
 
     #loss 초기화
@@ -99,14 +104,16 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
 
     for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
 
-        data = data.to(device)
+        data = data.cuda()
         with torch.no_grad():
             output = model(data).data
             #output = model(data)
+            
+            # val loss 측정
             loss, loss_cls, loss_box = loss_module(output, target, epoch, batch_idx, l_loader, 0)
 
             # 예측 box와 anchor box를 비교해서 conf_thresh_valid 값 이상인 box에 대해서 
-            all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 1, 1)
+            all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
 
             for i in range(output.size(0)):
                 boxes = all_boxes[i]
