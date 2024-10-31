@@ -1,6 +1,9 @@
 # train test split
 
 # 전체이미지에 대한 txt를 묶기
+
+
+# multi-labeling 데이터 셋 구축
 import tqdm
 from glob import glob
 import json
@@ -206,21 +209,18 @@ def filter_mk_splitfiles(tlist, root_dir, split_dir, is_train = True):
 if __name__ == '__main__':
 
     # 예시 디렉토리 경로
-    img_root_dir = r'D:\datasets\01.원천데이터'
-    label_root_dir = r'D:\datasets\02.라벨링데이터'
+    img_root_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\원천데이터'
+    label_root_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\라벨링데이터'
 
-    split_dir = r'D:\yowo_dataset'
-    rgb_dir = r'D:\yowo_dataset\rgb-images'
-    label_dir = r'D:\yowo_dataset\labels'
+    split_dir = r'D:\multilabel_dataset'
+    rgb_dir = r'D:\multilabel_dataset\rgb-images'
+    label_dir = r'D:\multilabel_dataset\labels'
 
-    total_path = r'D:\yowo_dataset\trainlist.txt'
-    test_path = r'D:\yowo_dataset\testlist.txt'
+    total_path = r'D:\multilabel_dataset\trainlist.txt'
+    test_path = r'D:\multilabel_dataset\testlist.txt'
 
     # data_filter 적용 ===========================================
-    data_filter = True
-
-
-
+    data_filter = False
 
     #==================================================================================================================
     #==================================================================================================================
@@ -247,13 +247,13 @@ if __name__ == '__main__':
         print('===========================make splitfiles===========================')
         mk_splitfiles(label_root_dir,split_dir, True)
 
-    # # img dataset 구성
-    # print('==========================make img dataset========================')
-    # mk_img_(img_root_dir, rgb_dir)
+    # img dataset 구성
+    print('==========================make img dataset========================')
+    mk_img_(img_root_dir, rgb_dir)
 
-    # # label dataset 구성
-    # print('=====================make label dataset======================')
-    # mk_label_(label_root_dir, label_dir)
+    # label dataset 구성
+    print('=====================make label dataset======================')
+    mk_label_(label_root_dir, label_dir)
 
     print('===================train / val datasplit======================')
     random_split(total_path, total_path, test_path)

@@ -187,9 +187,9 @@ if __name__ == '__main__':
 
     # mk_splitfiles(root_dir=root_dir, split_dir=split_dir)
 
-    # train_list = r'D:\last_dataset\trainlist.txt'
-    # test_list = r'D:\last_dataset\testlist.txt'
-    # random_split(train_list, train_list, test_list)
+    train_list = r'D:\last_dataset\trainlist.txt'
+    test_list = r'D:\last_dataset\testlist.txt'
+    random_split(train_list, train_list, test_list)
     
 
     # rename_files_in_directory(dst_img_dir)

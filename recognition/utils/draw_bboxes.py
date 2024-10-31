@@ -9,13 +9,13 @@ def load_bbox_annotation(file_path):
     with open(file_path, 'r') as file:
         for line in file.readlines():
             # 공백을 기준으로 나눠서 bbox 좌표와 클래스를 읽음
-            parts = line.split()
+            parts = line.lstrip().split()
             class_id = int(parts[0])
 
             #anchor 확인용
-            x_min, y_min, x_max, y_max = map(float, parts[1:])
+            #x_min, y_min, x_max, y_max = map(float, parts[1:])
 
-            #_, x_min, y_min, x_max, y_max = map(float, parts[1:])
+            _, x_min, y_min, x_max, y_max = map(float, parts[1:])
             
             bboxes.append((class_id, int(x_min), int(y_min), int(x_max), int(y_max)))
 
@@ -76,10 +76,11 @@ if __name__ == '__main__':
     
     import os
     
-    image_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\rgb-images\0\p01_20230102_194004_n7_084_06\p01_20230102_194004_n7_084_06_0036.png'
-    bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\labels\0\p01_20230102_194004_n7_084_06\p01_20230102_194004_n7_084_06_0036.txt'
+    image_path = r'D:\singlelabel_dataset\rgb-images\0\p01_20221103_072002_an1_036_03\p01_20221103_072002_an1_036_03_0006.png'
+    bbox_path = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_dataset\labels\1\p01_20221103_072002_an1_036_03\p01_20221103_072002_an1_036_03_0006.txt'
+    bbox_path3 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\train1\detections_8\p01_20221103_072002_an1_036_03_0006.txt'
     
-    # for new_dataset
+    # for binary_dataset
     image_base = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\new_dataset\rgb-images'
     bbox_path2 = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\custom_detections\new_train1\detections_1\p01_20221206_193010_n5_002_06_0002.txt'
     if bbox_path2[-19] == '_':
@@ -91,5 +92,5 @@ if __name__ == '__main__':
     # print(f'image path: {image_file}')
     # print(f'label path: {bbox_path2}')
 
-    #draw_bboxes(image_path, bbox_path)
-    draw_bboxes(image_file, bbox_path2)
+    draw_bboxes(image_path, bbox_path3)
+    #draw_bboxes(image_file, bbox_path2)

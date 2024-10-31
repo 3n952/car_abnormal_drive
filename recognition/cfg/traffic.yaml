@@ -1,6 +1,5 @@
 TRAIN:
-  RESUME_PATH: False # -> cfg.default에서 수정
-  #RESUME_PATH: '/Users/QBIC/Desktop/workspace/car_abnormal_driving/recognition/backup/traffic/second_test/yowo_traffic_8f30epochs_last.pth'
+  RESUME_PATH: False 
   DATASET: traffic  
   BATCH_SIZE: 8
   TOTAL_BATCH_SIZE: 60834
@@ -14,21 +13,14 @@ SOLVER:
   WEIGHT_DECAY: 5e-4
   STEPS: [3, 4, 5, 6]
   LR_DECAY_RATE: 0.5
-  # *10
-  #ANCHORS: [0.70458, 1.18803, 1.26654, 2.55121, 1.59382, 4.08321, 2.30548, 4.94180, 3.52332, 5.91979] 
-  # *3
-  #ANCHORS: [0.211374,0.356409,0.379962,0.765363,0.478146,1.224963,0.691644,1.48254,1.056996,1.775937]
-  # *1
-  #ANCHORS: [0.070458, 0.118803, 0.126654, 0.255121, 0.159382, 0.408321, 0.230548, 0.494180, 0.352332, 0.591979]
-  # 가로넓힌 앵커
-  ANCHORS: [0.211374, 0.356409, 0.379962, 0.765363, 0.324963, 0.238146, 0.691644, 1.48254, 1.175937, 0.756996]
+  ANCHORS: [0.29816, 0.41548, 0.50559, 0.65043, 1.6325, 1.86832, 0.14863, 0.21684, 0.86344, 1.09824]
   NUM_ANCHORS: 5
   OBJECT_SCALE: 3
   NOOBJECT_SCALE: 1
   CLASS_SCALE: 1
   COORD_SCALE: 1
 DATA:
-  NUM_FRAMES: 8
+  NUM_FRAMES: 10
   SAMPLING_RATE: 1
   TRAIN_JITTER_SCALES: [256, 320]
   TRAIN_CROP_SIZE: 224
@@ -40,25 +32,20 @@ MODEL:
   BACKBONE_3D: resnext101
   BACKBONE_2D: darknet
 WEIGHTS:
-  # BACKBONE_3D: "weights/resnet-34-kinetics-cpu.pth"
   BACKBONE_3D: False
-  # BACKBONE_2D: "weights/yolo.weights"
   BACKBONE_2D: False
   FREEZE_BACKBONE_3D: False
   FREEZE_BACKBONE_2D: False
 LISTDATA:
-  # BASE_PTH: "custom_dataset"
-  # TRAIN_FILE: "custom_dataset/trainlist.txt"
-  # TEST_FILE: "custom_dataset/testlist.txt"
-  #TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
-  BASE_PTH: "D:/last_dataset"
-  TRAIN_FILE: "D:/last_dataset/trainlist.txt"
-  TEST_FILE: "D:/last_dataset/testlist.txt"
+  BASE_PTH: "D:/singlelabel_dataset"
+  TRAIN_FILE: D:/singlelabel_dataset/trainlist.txt"
+  TEST_FILE: "D:/singlelabel_dataset/testlist.txt"
+  TEST_VIDEO_FILE: "yowo_dataset_test/trainlist_video.txt"
   MAX_OBJS: 5
-  #CLASS_NAMES: [
-  #  "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
-  #  "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
-  #]
+  CLASS_NAMES: [
+    "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
+    "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
+  ]
 
 BACKUP_DIR: "backup/traffic"
 RNG_SEED: 1

@@ -30,13 +30,11 @@ from core.model import YOWO, get_fine_tuning_parameters
 args  = parser.parse_args()
 cfg   = parser.load_config(args)
 
-
 ####### Create model
 # ---------------------------------------------------------------
 model = YOWO(cfg)
 model = model.cuda()
 model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
-
 
 ####### Load resume path if necessary
 # ---------------------------------------------------------------
