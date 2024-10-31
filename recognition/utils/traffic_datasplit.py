@@ -40,9 +40,9 @@ def mk_splitfiles(root_dir, split_dir, is_train = True):
                     if is_train:
                         with open(os.path.join(split_dir,'trainlist.txt'), 'a') as v:
                             v.writelines(f'{class_num}/{d3}/{d4[:-4]}txt\n')
-                    else:
-                        with open(os.path.join(split_dir,'testlist.txt'), 'a') as v:
-                            v.writelines(f'{class_num}/{d3}/{d4[:-4]}txt\n')
+                    # else:
+                    #   with open(os.path.join(split_dir,'testlist.txt'), 'a') as v:
+                    #       v.writelines(f'{class_num}/{d3}/{d4[:-4]}txt\n')
 
 
 # 원본 데이터셋에서 yowo학습을 위한 rgb-image, label 구성
@@ -245,6 +245,7 @@ if __name__ == '__main__':
 
     else:
         print('===========================make splitfiles===========================')
+        mk_splitfiles(label_root_dir,split_dir, False)
         mk_splitfiles(label_root_dir,split_dir, True)
 
     # img dataset 구성

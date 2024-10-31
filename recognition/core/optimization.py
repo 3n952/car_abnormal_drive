@@ -173,7 +173,7 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                             best_j = j
                             best_iou = iou
 
-                    if best_iou > iou_thresh:
+                    if best_iou >= iou_thresh:
                         # tp
                         total_detected += 1
                         if int(boxes[best_j][6]) == box_gt[6]:
@@ -189,10 +189,11 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
             #assert num_gts == total_detected + correct 
             precision = 1.0 * total_detected / (total_detected + fp_detected)
             recall = 1.0 * total_detected / (total_detected + fn_detected)
+            
             # precision= 1.0*correct / (proposals+eps)
             # recall = 1.0*correct/ (total+eps)
 
-            # fscore 대신 mAP적용해보기 (미완)
+            # fscore 
             fscore = 2.0*precision*recall/ (precision+recall+eps)
             logging("[%d/%d]\t precision: %f, recall: %f, fscore: %f" % (batch_idx, nbatch, precision, recall, fscore))
 

@@ -37,7 +37,7 @@ if __name__ == '__main__':
                         shape=(224, 224),
                         transform=transforms.Compose([transforms.ToTensor()]), 
                         train=False, clip_duration=cfg.DATA.NUM_FRAMES, sampling_rate=1)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.BATCH_SIZE, shuffle=False,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 1, shuffle=True,
                                                 num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=False, pin_memory=True)
 
     # datapallel로 훈련 시 각 레이어 앞에 module.state_dict.key가 된다. 따라서 해당 접두사를 제거해야함.
@@ -71,7 +71,8 @@ if __name__ == '__main__':
         eps           = 1e-5
         anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
         num_anchors = 5
-        conf_thresh_valid = 0.01
+        conf_thresh_valid = 0.005
+        proposals = 0.0
 
         nbatch = len(test_loader)
         model.eval()
@@ -85,18 +86,19 @@ if __name__ == '__main__':
 
             elif image_load_mode == 2:
                 imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-1), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
-                
+            
             elif image_load_mode == 3:
                 #직접설정 -> str(int(frame_idx[0][-17])-1 수정
                 if frame_idx[0][-17] == 1:
                     imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-1), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
                 #etc
             else:
-                print('make sure to organizing data load mode. there is no data load mode')
-                
-            print(f'---{batch_idx + 1}번째 배치 이미지---')
-            print(f'image_name: {frame_idx[0][:-4]}')
+                print('make sure to organizing data load mode. there is no data load mode')               
 
+
+            print(f'---총 {nbatch}개의 이미지 중 {batch_idx + 1}번째 이미지---')
+            print(f'image_name: {frame_idx[0][:-4]}')
+            
             # input data put on gpu
             data = data.cuda()
             with torch.no_grad():
@@ -134,17 +136,26 @@ if __name__ == '__main__':
                             best_iou = iou
             
                     cls, cx, cy, cw, ch = boxes[best_j][6], boxes[best_j][0], boxes[best_j][1], boxes[best_j][2], boxes[best_j][3]
+                    # cx, cy 
+                    tx, ty, tw, th = float(truths[i][1]), float(truths[i][2]), float(truths[i][3]), float(truths[i][4])
 
                     x_min = round(float(cx - cw / 2.0) * 1280.0) 
                     y_min = round(float(cy - ch / 2.0) * 720.0)
                     x_max = round(float(cx + cw / 2.0) * 1280.0)
                     y_max = round(float(cy + ch / 2.0) * 720.0)
 
+                    tx_min = round(float(tx - tw / 2.0) * 1280.0) 
+                    ty_min = round(float(ty - th / 2.0) * 720.0)
+                    tx_max = round(float(tx + tw / 2.0) * 1280.0)
+                    ty_max = round(float(ty + th / 2.0) * 720.0)
+
                     # bbox 시각화
                     # 비정상내에서만 추출하는 경우
                     if image_load_mode >= 2:
                         cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+                        cv2.rectangle(image, (tx_min, ty_min), (tx_max, ty_max), (0, 255, 0), 2)
                         cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+                        #cv2.putText(image, 'GT', (tx_min, ty_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
                     # 정상/비정상 분류해서 시각화하는 경우
                     else:
@@ -164,5 +175,5 @@ if __name__ == '__main__':
 
                 # 이미지 저장
                 cv2.imwrite(f'assets/inference/train2/{frame_idx[0][:-4]}.png', image)
-        
+            
                 

@@ -87,9 +87,9 @@ def mk_splitfiles(root_dir, split_dir, is_train = True):
                 if is_train:
                     with open(os.path.join(split_dir,'trainlist.txt'), 'a') as v:
                         v.writelines(f'{d1}/{d2}/{d3[:-3]}txt\n')
-                else:
-                    with open(os.path.join(split_dir,'testlist.txt'), 'a') as v:
-                        v.writelines(f'{d1}/{d2}/{d3[:-3]}txt\n')
+                #else:
+                #   with open(os.path.join(split_dir,'testlist.txt'), 'a') as v:
+                #       v.writelines(f'{d1}/{d2}/{d3[:-3]}txt\n')
 
 def rename_files_in_directory(directory):
     delete_list = []
@@ -180,12 +180,13 @@ if __name__ == '__main__':
     dst_img_dir = r'D:\last_dataset\rgb-images'
     dst_label_dir = r'D:\last_dataset\labels'
 
-    # make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir)
+    make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir)
 
-    # root_dir = r'D:\last_dataset\rgb-images'
-    # split_dir = r'D:\last_dataset'
-
-    # mk_splitfiles(root_dir=root_dir, split_dir=split_dir)
+    root_dir = r'D:\last_dataset\rgb-images'
+    split_dir = r'D:\last_dataset'
+    
+    mk_splitfiles(root_dir=root_dir, split_dir=split_dir, is_train=False)
+    mk_splitfiles(root_dir=root_dir, split_dir=split_dir)
 
     train_list = r'D:\last_dataset\trainlist.txt'
     test_list = r'D:\last_dataset\testlist.txt'

@@ -56,6 +56,6 @@ if __name__ == '__main__':
 
     print(f'k-means 결과 후보 앵커 추천:\n{anchor_boxes}')
 
-    # 정규화
+    # anchor 박스 생성
     anchor_boxes = print_anchor(anchor_box=anchor_boxes)
 
