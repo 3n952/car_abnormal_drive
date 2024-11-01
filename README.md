@@ -1,4 +1,4 @@
-# 비정상 주행 탐지 (Recognization of car abnormal driving )
+# 비정상 주행 탐지 (Recognization of car abnormal driving)
 
 ## Carla_sim
 - Recognition 모델의 학습 데이터를 carla 시뮬레이션으로부터 생성  
