@@ -1,6 +1,6 @@
 # Recognize abnormal-driving using "You Only Watch Once (YOWO)"
 
-## Visualize our work(traffic)
+## Visualize our work
 (수정 필요)
 <div align="center" style="width:image width px;">
   <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/biking.gif" width=240 alt="방향지시등 불이행 차선변경">
