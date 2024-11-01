@@ -21,7 +21,7 @@
 ## Installation
 ```bash
 git clone https://github.com/3n952/car_abnormal_drive.git
-cd YOWO
+cd recognition
 ```
 ### 1. Dataset
 traffic dataset download : 'https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=data&dataSetSn=71566'

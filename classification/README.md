@@ -20,7 +20,7 @@
 ## Installation
 ```bash
 git clone https://github.com/3n952/car_abnormal_drive.git
-cd YOWO
+cd classification
 ```
 ### 1. Dataset
 traffic dataset download : 'https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=data&dataSetSn=71566'
@@ -29,7 +29,7 @@ traffic dataset download : 'https://aihub.or.kr/aihubdata/data/view.do?currMenu=
 
 Pretrained models(video swin transformer) for traffic datasets can be downloaded from [업로드예정](https://www.dropbox.com).
 
-## Running the code
+## 3. Running the code
 
 * training:
 ```bash
