@@ -5,14 +5,12 @@ import time
 import math
 import random
 import numpy as np
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torchvision import datasets, transforms
-
 from datasets import list_dataset, cv2_transform
 from datasets.ava_dataset import Ava 
 from datasets.ava_eval_helper import read_labelmap 
@@ -22,8 +20,6 @@ from cfg import parser
 from core.utils import *
 from core.region_loss import RegionLoss, RegionLoss_Ava
 from core.model import YOWO, get_fine_tuning_parameters
-
-
 
 ####### Load configuration arguments
 # ---------------------------------------------------------------
