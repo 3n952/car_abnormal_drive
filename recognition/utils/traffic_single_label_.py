@@ -1,15 +1,13 @@
-# 한영상에 하나의 라벨(주행 종류)이 포함되어야 한다.(가정)
-
+# 한영상에 하나의 라벨(주행 종류)이 포함되어야 한다.
 # 정상 주행파트의 프레임과 객체별 주행을 기록
 # 나머지 주행 파트의 frame과 객체별 주행을 기록
-
 
 import os
 import json
 from glob import glob
 import shutil
 from tqdm import tqdm
-from traffic_datasplit import random_split
+from recognition.utils.traffic_multi_label_ import random_split
 import re
 
 def make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir):
@@ -172,7 +170,6 @@ def check_in_sequence(directory):
                 # print(f"Renamed: {file} -> {new_name}")
 
                     
-
 if __name__ == '__main__':
     #source_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\라벨링데이터\비정상'
     #src_img_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\원천데이터\비정상'
