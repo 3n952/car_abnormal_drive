@@ -5,6 +5,8 @@ import time
 import math
 import random
 import numpy as np
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -39,17 +41,27 @@ if cfg.TRAIN.RESUME_PATH:
     print('loading checkpoint {}'.format(cfg.TRAIN.RESUME_PATH))
     checkpoint = torch.load(cfg.TRAIN.RESUME_PATH)
     cfg.TRAIN.BEGIN_EPOCH = checkpoint['epoch'] + 1
-    best_score = checkpoint['score']
-    model.load_state_dict(checkpoint['state_dict'])
-    print("Loaded model score: ", checkpoint['score'])
-    print("===================================================================")
-    del checkpoint
+    best_score = checkpoint['best_score']
+    try:
+        model.load_state_dict(checkpoint['state_dict'])
+        print("Loaded model score: ", checkpoint['score'])
+        print("===================================================================")
+    except RuntimeError:
+        new_state_dict = OrderedDict()
+        for k, v in checkpoint['state_dict'].items():
+            if k.startswith('module.'):
+                new_state_dict[k[7:]] = v  # 'module.' 접두사 제거
+            else:
+                new_state_dict[k] = v
 
+        model.load_state_dict(new_state_dict)
+
+    del checkpoint
 
 ####### Test parameters
 # ---------------------------------------------------------------
 
-labelmap, _       = read_labelmap("/usr/home/sut/datasets/AVA/annotations/ava_action_list_v2.2.pbtxt")
+#labelmap, _       = read_labelmap("/usr/home/sut/datasets/AVA/annotations/ava_action_list_v2.2.pbtxt")
 num_classes       = cfg.MODEL.NUM_CLASSES
 clip_length		  = cfg.DATA.NUM_FRAMES
 crop_size 		  = cfg.DATA.TEST_CROP_SIZE
@@ -69,7 +81,9 @@ model.eval()
 
 ####### Data preparation and inference 
 # ---------------------------------------------------------------
-video_path = '/usr/home/sut/datasets/AVA/video_done/9Y_l9NsnYE0.mp4'
+
+# 입력 영상 불러오기
+video_path = r'D:\singlelabel_dataset\video\p01_20221103_072002_an1_036_03.mp4'
 cap = cv2.VideoCapture(video_path)
 
 cnt = 1
@@ -77,22 +91,20 @@ queue = []
 while(cap.isOpened()):
     ret, frame = cap.read()
 
+    # queue가 빈 경우 초기 프레임으로 대체
     if len(queue) <= 0: # At initialization, populate queue with initial frame
     	for i in range(clip_length):
     		queue.append(frame)
 
-    # Add the read frame to last and pop out the oldest one
+    # 새 프레임 추가 및 오래된 프레임 제거
     queue.append(frame)
     queue.pop(0)
 
-    # Resize images
+    #  이미지 전처리 (HWC -> CHW, [0, 255] -> [0, 1])
     imgs = [cv2_transform.resize(crop_size, img) for img in queue]
     frame = img = cv2.resize(frame, (crop_size, crop_size), interpolation=cv2.INTER_LINEAR)
 
-    # Convert image to CHW keeping BGR order.
     imgs = [cv2_transform.HWC2CHW(img) for img in imgs]
-
-    # Image [0, 255] -> [0, 1].
     imgs = [img / 255.0 for img in imgs]
 
     imgs = [
@@ -102,7 +114,7 @@ while(cap.isOpened()):
         for img in imgs
     ]
 
-    # Normalize images by mean and std.
+    # Normalize images 
     imgs = [
         cv2_transform.color_normalization(
             img,
@@ -112,7 +124,7 @@ while(cap.isOpened()):
         for img in imgs
     ]
 
-    # Concat list of images to single ndarray.
+    # 이미지 배열 to ndarray로 결합
     imgs = np.concatenate(
         [np.expand_dims(img, axis=1) for img in imgs], axis=1
     )
@@ -127,7 +139,7 @@ while(cap.isOpened()):
         output = model(imgs)
 
         preds = []
-        all_boxes = get_region_boxes_ava(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
+        all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
         for i in range(output.size(0)):
             boxes = all_boxes[i]
             boxes = nms(boxes, nms_thresh)
@@ -162,15 +174,15 @@ while(cap.isOpened()):
             text_size = []
             # scores, indices  = [list(a) for a in zip(*sorted(zip(scores,indices), reverse=True))] # if you want, you can sort according to confidence level
             for _, cls_ind in enumerate(indices):
-                text.append("[{:.2f}] ".format(scores[_]) + str(labelmap[cls_ind]['name']))
+
+                # 고칠부분: text.append("[{:.2f}] ".format(scores[_]) + str(labelmap[cls_ind]['name']))
+                text.append("[{:.2f}] ".format(scores[_]) + 'wtf')
                 text_size.append(cv2.getTextSize(text[-1], font, fontScale=0.25, thickness=1)[0])
                 coord.append((x1+3, y1+7+10*_))
                 cv2.rectangle(blk, (coord[-1][0]-1, coord[-1][1]-6), (coord[-1][0]+text_size[-1][0]+1, coord[-1][1]+text_size[-1][1]-4), (0, 255, 0), cv2.FILLED)
             frame = cv2.addWeighted(frame, 1.0, blk, 0.25, 1)
             for t in range(len(text)):
                 cv2.putText(frame, text[t], coord[t], font, 0.25, (0, 0, 0), 1)
-
-
 
     cv2.imshow('frame',frame)
     # cv2.imwrite('{:05d}.jpg'.format(cnt), frame) # save figures if necessay

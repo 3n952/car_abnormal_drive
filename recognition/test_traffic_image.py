@@ -18,7 +18,7 @@ from collections import OrderedDict
 validation의 정성 평가를 하기 위한 이미지 단위(key frame)의 추론 결과 시각화 코드
 '''
 
-RESUME_PATH = 'backup/traffic/train1/yowo_traffic_10f_best.pth'
+RESUME_PATH = 'backup/traffic/train3/yowo_traffic_10f_50epochs_best.pth'
 
 if __name__ == '__main__':
 
@@ -59,6 +59,8 @@ if __name__ == '__main__':
 
         model.load_state_dict(new_state_dict)
         print("Torch model load")
+        
+    del checkpoint
 
     with torch.no_grad():
         def truths_length(truths):
@@ -174,6 +176,6 @@ if __name__ == '__main__':
                 plt.close('all')  # 모든 figure 닫기
 
                 # 이미지 저장
-                cv2.imwrite(f'assets/inference/train2/{frame_idx[0][:-4]}.png', image)
+                #cv2.imwrite(f'assets/inference/train2/{frame_idx[0][:-4]}.png', image)
             
                 
