@@ -43,7 +43,6 @@ model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
 pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 logging('Total number of trainable parameters: {}'.format(pytorch_total_params))
 
-
 # Load resume path 
 if cfg.TRAIN.RESUME_PATH:
     print("===================================================================")
@@ -316,6 +315,6 @@ def video_mAP_traffic():
 
 if __name__ == '__main__':
     if cfg.TRAIN.DATASET == 'traffic':
-        video_mAP_ucf()
+        video_mAP_traffic()
     else: print('wrong dataset config')
     
