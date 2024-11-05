@@ -3,17 +3,13 @@
 ## Visualize our work
 (수정 필요)
 <div align="center" style="width:image width px;">
-  <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/biking.gif" width=240 alt="방향지시등 불이행 차선변경">
-  <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/fencing.gif" width=240 alt="실선구간 차선변경">
-  <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/golf_swing.gif" width=240 alt="동시 차로변경">
+  <img  src="examples\p01_20221103_072002_an1_051_04.gif" width=320 alt="방향지시등 불이행 차선변경">
+  <p>방향지시등 미사용 차선 변경</p>
+  <img  src="examples\p02_20221223_161004_an2_018_06.gif" width=320 alt="실선구간 차선변경">
+  <p>실선구간 차선변경</p>
+  <img  src="examples\p01_20230103_142001_an3_027_06.gif" width=320 alt="동시 차로변경">
+  <p>동시 차로변경</p>
 </div>
-
-<div align="center" style="width:image width px;"> 
-  <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/catch.gif" width=240 alt="차선물기">
-  <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/brush_hair.gif" width=240 alt="2개 차로 연속 변경">
-  <img  src="https://github.com/wei-tim/YOWO/blob/master/examples/pull_up.gif" width=240 alt="안전거리 미확보 차선변경">
-</div>
-<br/>
 <br/>
   
 # How to use YOWO for traffic dataset
