@@ -11,7 +11,6 @@ from . import custom_config
 # -----------------------------------------------------------------------------
 _C = CfgNode()
 
-
 # ---------------------------------------------------------------------------- #
 # Batch norm options
 # ---------------------------------------------------------------------------- #
@@ -63,14 +62,15 @@ _C.TRAIN.TOTAL_BATCH_SIZE = 128
 
 _C.TRAIN.LEARNING_RATE = 1e-4
 
-#_C.TRAIN.RESUME_PATH = ""
-_C.TRAIN.RESUME_PATH = False
+_C.TRAIN.RESUME_PATH = ""
+#_C.TRAIN.RESUME_PATH = False
 _C.TRAIN.DETECT_PATH = ""
 _C.TRAIN.ONLY_DETECT = False
 
 _C.TRAIN.EVALUATE = False
 _C.TRAIN.BEGIN_EPOCH = 1
 _C.TRAIN.END_EPOCH = 6
+_C.TRAIN.STEPS = 20
 # use groundtruth for validation
 _C.TRAIN.USE_GROUNDTRUTH = False
 # use slowfast detection for validation
