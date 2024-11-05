@@ -10,6 +10,7 @@ from cfg import parser
 from core.model import YOWO
 from core.utils import *
 from core.eval_results import *
+from collections import OrderedDict
 
 ####### Load configuration arguments
 # ---------------------------------------------------------------
@@ -39,7 +40,7 @@ eps           = 1e-5
 # ---------------------------------------------------------------
 model = YOWO(cfg)
 model = model.cuda()
-model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
+#model = nn.DataParallel(model, device_ids=None) # in multi-gpu case
 pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 logging('Total number of trainable parameters: {}'.format(pytorch_total_params))
 
@@ -47,26 +48,37 @@ logging('Total number of trainable parameters: {}'.format(pytorch_total_params))
 if cfg.TRAIN.RESUME_PATH:
     print("===================================================================")
     print('loading checkpoint {}'.format(cfg.TRAIN.RESUME_PATH))
-    checkpoint = torch.load(cfg.TRAIN.RESUME_PATH)
-    model.load_state_dict(checkpoint['state_dict'])
+    checkpoint = torch.load(cfg.TRAIN.RESUME_PATH, map_location = 'cuda')
+
+    try:
+        model.load_state_dict(checkpoint['state_dict'])
+    except RuntimeError:
+        new_state_dict = OrderedDict()
+        for k, v in checkpoint['state_dict'].items():
+            if k.startswith('module.'):
+                new_state_dict[k[7:]] = v  # 'module.' 접두사 제거
+            else:
+                new_state_dict[k] = v
+
+        model.load_state_dict(new_state_dict)
+    
     model.eval()
-    print("Model loaded!")
-    print("===================================================================")
     del checkpoint
 
-
 def get_clip(root, imgpath, train_dur, sampling_rate, dataset):
-    im_split = imgpath.split('/')
+
+    modified_path = imgpath.replace("\\", "/")
+    im_split = modified_path.split('/')
     num_parts = len(im_split)
-    class_name = im_split[-3]
-    file_name = im_split[-2]
-    im_ind = int(im_split[num_parts - 1][0:5])
+    class_name = im_split[3]
+    file_name = im_split[4]
+    im_ind = int(im_split[num_parts-1][-8:-4])
     if dataset == 'traffic':
-        img_name = os.path.join(class_name, file_name, '{:05d}.png'.format(im_ind))
+        img_name = os.path.join(class_name, file_name, file_name+'_{:04d}.png'.format(im_ind))
     else:
         print('there is no custom dataset. plsease make your own one')
 
-    labpath = os.path.join(base_path, 'labels', class_name, file_name, '{:05d}.txt'.format(im_ind))
+    labpath = os.path.join(base_path, 'labels', class_name, file_name, file_name+'_{:04d}.txt'.format(im_ind))
     img_folder = os.path.join(base_path, 'rgb-images', class_name, file_name)
     max_num = len(os.listdir(img_folder))
     clip = [] 
@@ -80,7 +92,7 @@ def get_clip(root, imgpath, train_dur, sampling_rate, dataset):
             i_img = max_num
 
         if dataset == 'traffic':
-            path_tmp = os.path.join(base_path, 'rgb-images', class_name, file_name, '{:05d}.png'.format(i_img))           
+            path_tmp = os.path.join(base_path, 'rgb-images', class_name, file_name, file_name+'_{:04d}.png'.format(i_img))           
         clip.append(Image.open(path_tmp).convert('RGB'))
 
     label = torch.zeros(40 * 5)
@@ -144,7 +156,7 @@ def video_mAP_traffic():
     detected_boxes = {}
     gt_videos = {}
     for line in lines:
-        print(line)
+        # print(line)
         line = line.rstrip()
         test_loader = torch.utils.data.DataLoader(
                           testData(os.path.join(base_path, 'rgb-images', line),
@@ -155,10 +167,10 @@ def video_mAP_traffic():
         video_name = ''
         v_annotation = {}
         all_gt_boxes = []
-        t_label = -1
+        #t_label = -1
 
         for batch_idx, (data, target, img_name) in enumerate(test_loader):
-            path_split = img_name[0].split('/')
+            path_split = img_name[0].split('\\')
             if video_name == '':
                 video_name = os.path.join(path_split[0], path_split[1])
 
@@ -175,14 +187,17 @@ def video_mAP_traffic():
                     truths = target[i].view(-1, 5)
                     num_gts = truths_length(truths)
 
-                    if t_label == -1:
-                        t_label = int(truths[0][0]) + 1
+                    #if t_label == -1:
+                    #    print('there is wrong class "-1" ')
+                    #    t_label = int(truths[0][0]) + 1
+
+                    t_label = int(truths[0][0])
 
                     # generate detected tubes for all classes
                     # save format: {img_name: {cls_ind: array[[x1,y1,x2,y2, cls_score], [], ...]}}
                     img_annotation = {}
                     for cls_idx in range(num_classes):
-                        cls_idx += 1    # index begins from 1
+                        cls_idx += 1   # index begins from 1
                         cls_boxes = np.zeros([n_boxes, 5], dtype=np.float32)
                         for b in range(n_boxes):
                             cls_boxes[b][0] = max(float(boxes[b][0]-boxes[b][2]/2.0) * 1280.0, 0.0)
@@ -211,6 +226,7 @@ def video_mAP_traffic():
     iou_list = [0.05, 0.1, 0.2, 0.3, 0.5, 0.75]
     for iou_th in iou_list:
         print('iou is: ', iou_th)
+        # core.eval_results
         print(evaluate_videoAP(gt_videos, detected_boxes, CLASSES, iou_th, True))
     
 

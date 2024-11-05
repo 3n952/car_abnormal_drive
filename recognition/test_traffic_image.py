@@ -37,7 +37,7 @@ if __name__ == '__main__':
                         shape=(224, 224),
                         transform=transforms.Compose([transforms.ToTensor()]), 
                         train=False, clip_duration=cfg.DATA.NUM_FRAMES, sampling_rate=1)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 1, shuffle=True,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 1, shuffle=False,
                                                 num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=False, pin_memory=True)
 
     # datapallel로 훈련 시 각 레이어 앞에 module.state_dict.key가 된다. 따라서 해당 접두사를 제거해야함.
@@ -91,16 +91,25 @@ if __name__ == '__main__':
             
             elif image_load_mode == 3:
                 #직접설정 -> str(int(frame_idx[0][-17])-1 수정
-                if frame_idx[0][-17] == 1:
-                    imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-1), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+                if frame_idx[0][-17] == '2':
+                    imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-2), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+                elif frame_idx[0][-17] == '3':
+                    imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-2), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+                elif frame_idx[0][-17] == '4':
+                    imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-2), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+                elif frame_idx[0][-17] == '5':
+                    imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-2), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+                elif frame_idx[0][-17] == '7':
+                    imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',str(int(frame_idx[0][-17])-3), frame_idx[0][:-9], frame_idx[0][:-3]+'png')
+                else:
+                    print('train label is wrong')
+
                 #etc
             else:
                 print('make sure to organizing data load mode. there is no data load mode')               
 
-
             print(f'---총 {nbatch}개의 이미지 중 {batch_idx + 1}번째 이미지---')
             print(f'image_name: {frame_idx[0][:-4]}')
-            
             # input data put on gpu
             data = data.cuda()
             with torch.no_grad():
