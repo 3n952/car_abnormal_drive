@@ -1,7 +1,7 @@
 # Recognize abnormal-driving using "You Only Watch Once (YOWO)"
 
 ## Visualize our work
-(수정 필요)
+
 <div align="center" style="width:image width px;">
   <img  src="examples\p01_20221103_072002_an1_051_04.gif" width=320 alt="방향지시등 불이행 차선변경">
   <p>방향지시등 미사용 차선 변경</p>
