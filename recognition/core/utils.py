@@ -180,10 +180,13 @@ def nms(boxes, nms_thresh):
     det_confs = torch.zeros(len(boxes))
     for i in range(len(boxes)):
         det_confs[i] = 1 - boxes[i][4]                
-
+    #print('det_confs:', det_confs)
+    # 1-conf가 낮은 순서의 index
     _,sortIds = torch.sort(det_confs)
+    #print(sortIds)
     out_boxes = []
     for i in range(len(boxes)):
+        # conf 높은 순서부터
         box_i = boxes[sortIds[i]]
         if box_i[4] > 0:
             out_boxes.append(box_i)
@@ -288,7 +291,7 @@ def convert2long(matrix):
 
 def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, only_objectness=1, validation=False):
 
-    # output shape -> 8, 65 , 7, 7
+    # output shape -> 8, 65 , 7, 7  (배치사이즈, 앵커 * (8 + 4 + 1)  , 그리드 x, 그리드 y)
     
     anchor_step = len(anchors)//num_anchors
     if output.dim() == 3:
@@ -314,6 +317,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     xs = torch.sigmoid(output[0]) + grid_x
     ys = torch.sigmoid(output[1]) + grid_y
 
+    # anchor 설정 w, h값 tensor
     anchor_w = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([0]))
     anchor_h = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([1]))
 
@@ -370,13 +374,12 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
                     # 각 anchor box에 대한 index
                     ind = b*sz_hwa + i*sz_hw + cy*w + cx
                     det_conf =  det_confs[ind]
-                    # 
+                    # check objecness usage
                     if only_objectness:
-                        conf =  det_confs[ind]
+                        conf = det_confs[ind]
                     else:
                         conf = det_confs[ind] * cls_max_confs[ind]
-
-                    # threshold 0.4
+                    # threshold 0.005 , 0.4
                     if conf > conf_thresh:
                         bcx = xs[ind]
                         bcy = ys[ind]
