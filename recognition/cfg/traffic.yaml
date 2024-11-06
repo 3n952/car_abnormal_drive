@@ -1,5 +1,5 @@
 TRAIN:
-  RESUME_PATH: 'backup/traffic/train3/yowo_traffic_10f_50epochs_best.pth'
+  RESUME_PATH: 'backup/traffic/train5/yowo_traffic_10f_50epochs_best.pth'
   DATASET: traffic  
   BATCH_SIZE: 8
   TOTAL_BATCH_SIZE: 60834
@@ -29,7 +29,7 @@ DATA:
   MEAN: [0.3747, 0.3755, 0.3586]
   STD: [0.1770, 0.1705, 0.1837]
 MODEL:
-  NUM_CLASSES: 7
+  NUM_CLASSES: 5
   BACKBONE_3D: resnext101
   BACKBONE_2D: darknet
 WEIGHTS:
@@ -38,19 +38,18 @@ WEIGHTS:
   FREEZE_BACKBONE_3D: False
   FREEZE_BACKBONE_2D: False
 LISTDATA:
-  BASE_PTH: "D:/singlelabel_dataset"
-  TRAIN_FILE: D:/singlelabel_dataset/trainlist.txt"
-  TEST_FILE: "D:/singlelabel_dataset/testlist.txt"
-  TEST_VIDEO_FILE: "D:/singlelabel_dataset/testlist_video.txt"
+  BASE_PTH: "D:/multilabel_dataset"
+  TRAIN_FILE: D:/multilabel_dataset/trainlist.txt"
+  TEST_FILE: "D:/multilabel_dataset/example.txt"
+  TEST_VIDEO_FILE: "D:/multilabel_dataset/testlist_video.txt"
   MAX_OBJS: 5
-  CLASS_NAMES: [
-    "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
-    "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
-  ]
   # CLASS_NAMES: [
-  #   "실선구간 차선변경", "동시 차로변경", "차선물기", 
-  #   "2개 차로 연속 변경", "안전거리 미확보 차선변경"
+  #   "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
+  #   "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
   # ]
-
+  CLASS_NAMES: [
+    "실선구간 차선변경", "동시 차로변경", "차선물기", 
+    "2개 차로 연속 변경", "안전거리 미확보 차선변경"
+  ]
 BACKUP_DIR: "backup/traffic"
 RNG_SEED: 1

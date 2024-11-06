@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 from collections import OrderedDict
@@ -7,7 +6,6 @@ from core.optimization import *
 from cfg import parser
 from core.utils import *
 from core.model import YOWO
-
 
 ####### Load configuration arguments
 # ---------------------------------------------------------------
@@ -50,8 +48,8 @@ clip_length		  = cfg.DATA.NUM_FRAMES
 crop_size 		  = cfg.DATA.TEST_CROP_SIZE
 anchors           = [float(i) for i in cfg.SOLVER.ANCHORS]
 num_anchors       = cfg.SOLVER.NUM_ANCHORS
-nms_thresh        = 0.6
-conf_thresh_valid = 0.005
+nms_thresh        = 0.5
+conf_thresh_valid = 0.1
 
 model.eval()
 
@@ -59,7 +57,7 @@ model.eval()
 # ---------------------------------------------------------------
 
 # 입력 영상 불러오기
-video_path = 'D:/singlelabel_dataset/video/p05_20220903_100014_an5_055_06.mp4'
+video_path = 'D:/singlelabel_dataset/video/p01_20230108_123006_an7_347_04.mp4'
 video_split = video_path.split('/')
 print('video inference starting...')
 #img_mean, img_std = calculate_mean_std(video_path)
@@ -69,7 +67,7 @@ fps = int(cap.get(cv2.CAP_PROP_FPS))
 print(f'this video has {fps} fps')
 
 # 비디오 저장
-output_video_path = 'examples/singlelabel_dataset/'+video_split[3]
+output_video_path = 'examples/traffic_dataset/'+video_split[3]
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')

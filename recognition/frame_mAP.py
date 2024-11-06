@@ -18,7 +18,7 @@ from collections import OrderedDict
 validation의 정성 평가를 하기 위한 이미지 단위(key frame)의 추론 결과 시각화 코드
 '''
 
-RESUME_PATH = 'backup/traffic/train2/yowo_traffic_10f_20epochs_best.pth'
+RESUME_PATH = 'backup/traffic/train1/yowo_traffic_10f_10epochs_best.pth'
 
 if __name__ == '__main__':
 
@@ -26,23 +26,13 @@ if __name__ == '__main__':
     args  = parser.parse_args()
     cfg   = parser.load_config(args)
 
+    # image_path mode 1,2,3 ...
+    # (1). 1: 정상주행을 포함한 주행라벨링 0(정상),1(방향지시등 불이행),2,...,7 
+    # (2). 2: 정상주행을 포함하지 않은 주행라벨링 0(방향지시등 불이행), 1, .., 6 (정상을 제외하고 라벨값이 한 인덱스씩 내려옴)
+    # (3). 3: 정상주행을 포함하지 않은 주행 라벨링 0,1,...,n (정상 제외하고 원하는 라벨만 골라서 학습)
 
-    ####### Test parameters
-    # ---------------------------------------------------------------
-    num_classes       = cfg.MODEL.NUM_CLASSES
-    clip_length		  = cfg.DATA.NUM_FRAMES
-    crop_size 		  = cfg.DATA.TEST_CROP_SIZE
-    anchors           = [float(i) for i in cfg.SOLVER.ANCHORS]
-    num_anchors       = cfg.SOLVER.NUM_ANCHORS
-    nms_thresh        = 0.5
-    conf_thresh_valid = 0.005
     image_load_mode = 1
 
-    '''image_path mode 1,2,3 에 대한 설명
-    (1). 1: 정상주행을 포함한 주행라벨링 0(정상),1(방향지시등 불이행),2,...,7  -> multilabel_dataset
-    (2). 2: 정상주행을 포함하지 않은 주행라벨링 0(방향지시등 불이행), 1, .., 6 (정상을 제외하고 라벨값이 한 인덱스씩 내려옴) -> singlelabel_dataset
-    (3). 3: 정상주행을 포함하지 않은 주행 라벨링 0,1,...,n (정상 제외하고 원하는 라벨만 골라서 학습) -> traffic_dataset
-    '''
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     test_dataset = custom_dataset.Traffic_Dataset(cfg.LISTDATA.BASE_PTH, cfg.LISTDATA.TEST_FILE, dataset='traffic',
                         shape=(224, 224),
@@ -81,15 +71,16 @@ if __name__ == '__main__':
         # Test parameters
         nms_thresh    = 0.5
         iou_thresh    = 0.5
+        eps           = 1e-5
         anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
         num_anchors = 5
         conf_thresh_valid = 0.005
+        proposals = 0.0
 
         nbatch = len(test_loader)
         model.eval()
 
         for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
-        
             if image_load_mode == 1:
                 if frame_idx[0][-19] == 'a':
                     imgpath = os.path.join(cfg.LISTDATA.BASE_PTH+'/rgb-images',frame_idx[0][-17], frame_idx[0][:-9], frame_idx[0][:-3]+'png')
@@ -120,77 +111,81 @@ if __name__ == '__main__':
 
             print(f'---총 {nbatch}개의 이미지 중 {batch_idx + 1}번째 이미지---')
             print(f'image_name: {frame_idx[0][:-4]}')
-
-            # visualize results
-            image = cv2.imread(imgpath)
-            if image is None:
-                print(f"Error: Unable to load image at {imgpath}. Please check the file path and file integrity.")
-                continue
-            else:
-            # 이미지가 제대로 로드되었을 경우에만 진행
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-            # Model inference
+            # input data put on gpu
+            data = data.cuda()
             with torch.no_grad():
-                data = data.cuda()
-                # output.shape -> 1, 60, 7, 7
                 output = model(data)
-                preds = []
-                all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
+                all_boxes = get_region_boxes(output, conf_thresh_valid, cfg.MODEL.NUM_CLASSES, anchors, num_anchors, 1, 1)
+
                 for i in range(output.size(0)):
                     boxes = all_boxes[i]
-                    #print('boxes:', boxes)
                     boxes = nms(boxes, nms_thresh)
-                    
-                    for box in boxes:
-                        #print(box)
-                        x1 = float(box[0]-box[2]/2.0)
-                        y1 = float(box[1]-box[3]/2.0)
-                        x2 = float(box[0]+box[2]/2.0)
-                        y2 = float(box[1]+box[3]/2.0)
-                        det_conf = float(box[4])
-                        #cls_out = det_conf * box[5].item()
-                        preds.append([[x1,y1,x2,y2], det_conf, box[6].item()])
 
-            for dets in preds:
-                x1 = int(dets[0][0] * 1280.0)
-                y1 = int(dets[0][1] * 720.0)
-                x2 = int(dets[0][2] * 1280.0)
-                y2 = int(dets[0][3] * 720.0) 
-                # det_conf
-                cls_scores = dets[1]
-                scores = None
-                
-                if cls_scores > 0.4:
-                    scores = cls_scores
-                else: continue
+                truths = target[i].view(-1, 5)
 
-                cv2.rectangle(image, (x1,y1), (x2,y2), (0,255,0), 2)
+                # total : 전체 sample에 대한 gt값 
+                num_gts = truths_length(truths)
+                pred_list = [] # LIST OF CONFIDENT BOX INDICES
 
-                if scores is not None:
-                    font  = cv2.FONT_HERSHEY_SIMPLEX
-                    coord = []
-                    text  = []
-                    text_size = []
+                for i in range(len(boxes)):
+                    if boxes[i][4] > 0.25:
+                        proposals = proposals+1
+                        pred_list.append(i)
 
-                    text.append("({:.2f}) ".format(scores) + str(dets[2]))
-                    text_size.append(cv2.getTextSize(text[-1], font, fontScale=0.25, thickness=1)[0])
-                    coord.append((x1-5, y1-5))
-                    #cv2.rectangle(image, (coord[-1][0]-1, coord[-1][1]-6), (coord[-1][0]+text_size[-1][0]+1, coord[-1][1]+text_size[-1][1]-4), (0, 255, 0), cv2.FILLED)
-                    for t in range(len(text)):
-                        cv2.putText(image, text[t], coord[t], font, 0.25, (0, 255, 0), 1)
+                # visualize results
+                image = cv2.imread(imgpath)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+                for i in range(num_gts):
+                    box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
+                    best_iou = 0
+                    best_j = 0
+                    for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
+                        iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
+                        # proposal 중 가장 iou 값 높은 예측 박스 index
+                        if iou > best_iou:
+                            best_j = j
+                            best_iou = iou
             
-            # 이미지 출력    
-            plt.figure(figsize=(10, 10))
-            plt.imshow(image)
-            plt.axis('off')
-            plt.show()
-            plt.close('all')  # 모든 figure 닫기
+                    cls, cx, cy, cw, ch = boxes[best_j][6], boxes[best_j][0], boxes[best_j][1], boxes[best_j][2], boxes[best_j][3]
+                    # cx, cy 
+                    tx, ty, tw, th = float(truths[i][1]), float(truths[i][2]), float(truths[i][3]), float(truths[i][4])
 
-            # try:
-            #     os.mkdir(f'assets/inference/multilabel_train/{frame_idx[0][:-9]}')
-            # except:
-            #     pass
+                    x_min = round(float(cx - cw / 2.0) * 1280.0) 
+                    y_min = round(float(cy - ch / 2.0) * 720.0)
+                    x_max = round(float(cx + cw / 2.0) * 1280.0)
+                    y_max = round(float(cy + ch / 2.0) * 720.0)
 
-            # # 이미지 저장
-            # cv2.imwrite(f'assets/inference/multilabel_train/{frame_idx[0][:-9]}/{frame_idx[0][:-4]}.png', image)
+                    tx_min = round(float(tx - tw / 2.0) * 1280.0) 
+                    ty_min = round(float(ty - th / 2.0) * 720.0)
+                    tx_max = round(float(tx + tw / 2.0) * 1280.0)
+                    ty_max = round(float(ty + th / 2.0) * 720.0)
+
+                    # bbox 시각화
+                    # 비정상내에서만 추출하는 경우
+                    if image_load_mode >= 2:
+                        cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+                        cv2.rectangle(image, (tx_min, ty_min), (tx_max, ty_max), (0, 255, 0), 2)
+                        cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+                        #cv2.putText(image, 'GT', (tx_min, ty_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+                    # 정상/비정상 분류해서 시각화하는 경우
+                    else:
+                        if int(cls.item()) == 0:
+                            cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                            cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                        else:
+                            cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+                            cv2.putText(image, str(cls.item()), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+
+                # 이미지 출력    
+                plt.figure(figsize=(10, 10))
+                plt.imshow(image)
+                plt.axis('off')
+                plt.show()
+                plt.close('all')  # 모든 figure 닫기
+
+                # 이미지 저장
+                #cv2.imwrite(f'assets/inference/train2/{frame_idx[0][:-4]}.png', image)
+            
+                
