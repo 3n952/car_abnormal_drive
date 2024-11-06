@@ -3,15 +3,24 @@
 ## Visualize our work
 
 <div align="center" style="width:image width px;">
-  <img  src="examples\p01_20221103_072002_an1_051_04.gif" width=320 alt="방향지시등 불이행 차선변경">
+  <img  src="examples\방향지시등불이행차선변경.gif" width=320 alt="방향지시등 불이행 차선변경">
   <p>방향지시등 미사용 차선 변경</p>
-  <img  src="examples\p02_20221223_161004_an2_018_06.gif" width=320 alt="실선구간 차선변경">
+  <img  src="examples\실선구간차선변경.gif" width=320 alt="실선구간 차선변경">
   <p>실선구간 차선변경</p>
-  <img  src="examples\p01_20230103_142001_an3_027_06.gif" width=320 alt="동시 차로변경">
+  <img  src="examples\동시차로변경.gif" width=320 alt="동시 차로변경">
   <p>동시 차로변경</p>
 </div>
 <br/>
-  
+
+<div align="center" style="width:image width px;">
+  <img  src="examples\안전거리미확보차선변경.gif" width=320 alt="안전거리 미확보 차선변경">
+  <p>안전거리 미확보 차선변경</p>
+  <img  src="examples\정체구간차선변경.gif" width=320 alt="정체구간 차선변경">
+  <p>정체구간 차선변경</p>
+  <img  src="examples\2개차로연속변경.gif" width=320 alt="2개차로 연속변경">
+  <p>2개차로 연속변경</p>
+</div>
+<br/>
 # How to use YOWO for traffic dataset
 
 ## Installation
@@ -53,8 +62,10 @@ python main.py --cfg cfg/traffic.yaml
 ## Validating the model
 
 * For traffic dataset, after each epoch, validation is performed and Video-mAP score is provided.
-* For video_mAP, set the pretrained model in the correct yaml file and run:
+* For frame_mAP or video_mAP, set the pretrained model in the correct yaml file and run:
+
 ```bash
+python frame_mAP.py --cfg cfg/traffic.yaml
 python video_mAP.py --cfg cfg/traffic.yaml
 ```
 
@@ -63,6 +74,10 @@ python video_mAP.py --cfg cfg/traffic.yaml
 * You can run traffic pretrained model on any test video with the following code:
 ```bash
 python test_video_traffic.py --cfg cfg/traffic.yaml
+```
+* And also you can run model on any test image if it has a sequence:
+```bash
+python test_image_traffic.py --cfg cfg/traffic.yaml
 ```
 
 ### Citation
