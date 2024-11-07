@@ -16,6 +16,7 @@ from collections import OrderedDict
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 '''
 frame mAp 분석
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 
         total       = 0.0
         proposals   = 0.0
-        tp = 0
+        total_tp = 0
         fp = 0
         fn = 0
 
@@ -106,6 +107,7 @@ if __name__ == '__main__':
                             pred_list.append(i)
 
                     for i in range(num_gts):
+                        tp = 0
                         box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
                         best_iou = 0
                         best_j = -1
@@ -125,17 +127,18 @@ if __name__ == '__main__':
                             
                         else:
                             fp += 1
-                        
-                    fn = fn + (num_gts - tp)
 
-                precision = 1.0 * tp / (tp + fp)
-                recall = 1.0 * tp / (tp + fn) 
+                    fn = fn + (num_gts - tp)
+                    total_tp += tp
+
+                precision = 1.0 * total_tp / (total_tp + fp)
+                recall = 1.0 * total_tp / (total_tp + fn) 
 
                 # fscore 
                 fscore = 2.0*precision*recall/ (precision+recall+eps)
-                logging("[총 %d 개의 batch 중 %d 번째 batch 까지의]\t precision: %f, recall: %f, fscore: %f" % (nbatch, batch_idx+1, precision, recall, fscore))
+                logging.info("[총 %d 개의 batch 중 %d 번째 batch 까지의]\t precision: %f, recall: %f, fscore: %f" % (nbatch, batch_idx+1, precision, recall, fscore))
 
-        print()
+        print('================Total score==================')
         print(f'recall for total test dataset: {recall}')
         print(f'precision for total test dataset: {precision}')
         print(f'f-score for total test dataset: {fscore}')
