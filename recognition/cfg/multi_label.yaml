@@ -1,6 +1,6 @@
 TRAIN:
   # multi-label(정상 주행 포함) pth 경로
-  RESUME_PATH: 'backup/traffic/train5/yowo_traffic_10f_50epochs_best.pth'
+  RESUME_PATH: 'backup/traffic/train2/yowo_traffic_10f_20epochs_best.pth'
   DATASET: traffic  
   BATCH_SIZE: 8
   TOTAL_BATCH_SIZE: 148229
