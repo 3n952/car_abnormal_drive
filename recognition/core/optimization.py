@@ -31,10 +31,10 @@ def train_traffic(cfg, epoch, model, train_loader, loss_module, optimizer):
 
         # grad 계산 및 적용
         #gradient accumulation 
-        
+        # train_step = 20 
         if batch_idx == 0:
             pass
-        elif batch_idx % cfg.TRAIN.STEPS == 0:
+        elif batch_idx % 20 == 0:
             optimizer.step()
             optimizer.zero_grad()
 
@@ -80,7 +80,7 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
     loss_module.reset_meters()
     l_loader = len(test_loader)
 
-    for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
+    for batch_idx, (_, data, target) in enumerate(test_loader):
 
         data = data.cuda()
         with torch.no_grad():

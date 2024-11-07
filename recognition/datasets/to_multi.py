@@ -1,8 +1,5 @@
 # train test split
-
 # 전체이미지에 대한 txt를 묶기
-
-
 # multi-labeling 데이터 셋 구축
 import tqdm
 from glob import glob
@@ -11,7 +8,7 @@ import os
 import shutil
 import random
 
-from data_filter import dataset_filter
+from datasets.resoluion_filter import dataset_filter
 
 
 def mk_splitfiles(root_dir, split_dir, is_train = True):
@@ -204,13 +201,11 @@ def filter_mk_splitfiles(tlist, root_dir, split_dir, is_train = True):
                         continue
 
     
-
-
 if __name__ == '__main__':
 
     # 예시 디렉토리 경로
-    img_root_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\원천데이터'
-    label_root_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\라벨링데이터'
+    img_root_dir = r'289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\원천데이터'
+    label_root_dir = r'289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\라벨링데이터'
 
     split_dir = r'D:\multilabel_dataset'
     rgb_dir = r'D:\multilabel_dataset\rgb-images'
@@ -241,7 +236,6 @@ if __name__ == '__main__':
         filtered = dataset_filter(json_path = label_root_dir)
         tlist = filtered.filtering()
         filter_mk_splitfiles(tlist, label_root_dir, split_dir, True)
-        
 
     else:
         print('===========================make splitfiles===========================')

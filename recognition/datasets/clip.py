@@ -247,7 +247,6 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
         return fname, clip, label
     
     else:
-        #return im_split[0] + '_' +im_split[1] + '_' + im_split[2], clip, label
         return fname, clip, label
 
 def load_data_detection_test(root, imgpath, train_dur, num_samples):
@@ -256,41 +255,3 @@ def load_data_detection_test(root, imgpath, train_dur, num_samples):
 
     return clip, label
 
-def get_clip(root, imgpath, train_dur, num_samples):
-
-    im_split = imgpath.split('/')
-    num_parts = len(im_split)
-    im_ind = int(im_split[num_parts - 1][0:5])
-
-    # for UCF101 dataset
-    base_path = "/usr/home/sut/datasets/ucf24"
-    labpath = os.path.join(base_path, 'labels', im_split[6], im_split[7], '{:05d}.txt'.format(im_ind))
-    img_folder = os.path.join(base_path, 'rgb-images', im_split[6], im_split[7])
-
-    # for arbitrary videos
-    max_num = len(os.listdir(img_folder))
-
-    clip = []
-    for i in reversed(range(train_dur)):
-        # the clip is created with the trained sample(image) being placed as the last image and 7 adjacent images before it
-        i_temp = im_ind - i
-        if i_temp < 1:
-            i_temp = 1
-        if i_temp > max_num:
-            i_temp = max_num
-
-        path_tmp = os.path.join(base_path, 'rgb-images', im_split[6], im_split[7] ,'{:05d}.png'.format(i_temp))
-        
-        clip.append(Image.open(path_tmp).convert('RGB'))
-
-    label = torch.zeros(50 * 5)
-    tmp = torch.zeros(1, 5)
-    tmp = tmp.view(-1)
-    tsz = tmp.numel()
-
-    if tsz > 50 * 5:
-        label = tmp[0:50 * 5]
-    elif tsz > 0:
-        label[0:tsz] = tmp
-
-    return clip, label

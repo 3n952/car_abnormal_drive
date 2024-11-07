@@ -171,13 +171,13 @@ def check_in_sequence(directory):
 
                     
 if __name__ == '__main__':
-    #source_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\라벨링데이터\비정상'
-    #src_img_dir = r'D:\task2\289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\원천데이터\비정상'
+    source_dir = r'289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\라벨링데이터\비정상'
+    src_img_dir = r'289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\원천데이터\비정상'
 
-    #dst_img_dir = r'D:\singlelabel_dataset\rgb-images'
-    #dst_label_dir = r'D:\singlelabel_dataset\labels'
+    dst_img_dir = r'D:\singlelabel_dataset\rgb-images'
+    dst_label_dir = r'D:\singlelabel_dataset\labels'
 
-    #make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir)
+    make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir)
 
     root_dir = r'D:\singlelabel_dataset\rgb-images'
     split_dir = r'D:\singlelabel_dataset'
@@ -190,8 +190,8 @@ if __name__ == '__main__':
     random_split(train_list, train_list, test_list)
     
 
-    # rename_files_in_directory(dst_img_dir)
-    # check_in_sequence(dst_img_dir)
+    rename_files_in_directory(dst_img_dir)
+    check_in_sequence(dst_img_dir)
 
-    #rename_files_in_directory(dst_label_dir)
-    #check_in_sequence(dst_label_dir)
+    rename_files_in_directory(dst_label_dir)
+    check_in_sequence(dst_label_dir)

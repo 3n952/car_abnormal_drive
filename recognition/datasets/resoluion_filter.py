@@ -1,10 +1,11 @@
-# 기준이 되는 해상도 이외의 데이터는 제외하기 위함
+# 기준이 되는 해상도 이외의 데이터는 제외
+
 import os
 import json
 from glob import glob
 from tqdm import tqdm
 
-class dataset_filter():
+class resoltion_filter():
     def __init__(self, json_path, resolution = (1280, 720), is_base = True):
         self.json_path = json_path
         self.resolution = resolution
@@ -96,7 +97,7 @@ class dataset_filter():
 if __name__ == "__main__":
 
     jsondir = 'D:/datasets/02.라벨링데이터'
-    filtered = dataset_filter(jsondir)
+    filtered = resoltion_filter(jsondir)
 
     # 637개
     # filtered.__count__()

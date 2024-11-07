@@ -14,10 +14,9 @@ class CAM_Module(nn.Module):
     def __init__(self, in_dim):
         super(CAM_Module, self).__init__()
         self.chanel_in = in_dim
-
-
         self.gamma = nn.Parameter(torch.zeros(1))
         self.softmax  = nn.Softmax(dim=-1)
+
     def forward(self,x):
         """
             inputs :
