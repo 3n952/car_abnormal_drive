@@ -48,8 +48,8 @@ clip_length		  = cfg.DATA.NUM_FRAMES
 crop_size 		  = cfg.DATA.TEST_CROP_SIZE
 anchors           = [float(i) for i in cfg.SOLVER.ANCHORS]
 num_anchors       = cfg.SOLVER.NUM_ANCHORS
-nms_thresh        = 0.5
-conf_thresh_valid = 0.1
+nms_thresh        = 0.6
+conf_thresh_valid = 0.4
 
 model.eval()
 

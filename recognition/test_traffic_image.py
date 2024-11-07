@@ -18,8 +18,6 @@ from collections import OrderedDict
 validation의 정성 평가를 하기 위한 이미지 단위(key frame)의 추론 결과 시각화 코드
 '''
 
-RESUME_PATH = 'backup/traffic/train2/yowo_traffic_10f_20epochs_best.pth'
-
 if __name__ == '__main__':
 
     # load config
@@ -34,8 +32,8 @@ if __name__ == '__main__':
     crop_size 		  = cfg.DATA.TEST_CROP_SIZE
     anchors           = [float(i) for i in cfg.SOLVER.ANCHORS]
     num_anchors       = cfg.SOLVER.NUM_ANCHORS
-    nms_thresh        = 0.5
-    conf_thresh_valid = 0.005
+    nms_thresh        = 0.6
+    conf_thresh_valid = 0.4
     image_load_mode = 1
 
     '''image_path mode 1,2,3 에 대한 설명
@@ -54,7 +52,7 @@ if __name__ == '__main__':
     # datapallel로 훈련 시 각 레이어 앞에 module.state_dict.key가 된다. 따라서 해당 접두사를 제거해야함.
     model = YOWO(cfg)
     model = model.cuda()
-    checkpoint = torch.load(RESUME_PATH, map_location = device)
+    checkpoint = torch.load(cfg.TRAIN.RESUME_PATH, map_location = device)
 
     try:
         model.load_state_dict(checkpoint['state_dict'])
@@ -78,12 +76,13 @@ if __name__ == '__main__':
             for i in range(40):
                 if truths[i][1] == 0:
                     return i
+                
         # Test parameters
-        nms_thresh    = 0.5
+        nms_thresh    = 0.6
         iou_thresh    = 0.5
         anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
         num_anchors = 5
-        conf_thresh_valid = 0.005
+        conf_thresh_valid = 0.4
 
         nbatch = len(test_loader)
         model.eval()
@@ -136,7 +135,7 @@ if __name__ == '__main__':
                 # output.shape -> 1, 60, 7, 7
                 output = model(data)
                 preds = []
-                all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
+                all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 1, 1)
                 for i in range(output.size(0)):
                     boxes = all_boxes[i]
                     #print('boxes:', boxes)
@@ -187,6 +186,7 @@ if __name__ == '__main__':
             plt.show()
             plt.close('all')  # 모든 figure 닫기
 
+            # 이미지 저장
             # try:
             #     os.mkdir(f'assets/inference/multilabel_train/{frame_idx[0][:-9]}')
             # except:
