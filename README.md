@@ -4,8 +4,8 @@
 - Recognition 모델의 학습 데이터를 carla 시뮬레이션으로부터 생성  
 
 <div align="center" style="width:image width px;">
-  <img  src="carla_sim/assets/sim_data.png" width=240 alt="방향지시등 불이행 차선변경">
-  <img  src="carla_sim/assets/real_data.png" width=240 alt="실선구간 차선변경">
+  <img  src="carla_sim/assets/sim_data.png" width=480 alt="방향지시등 불이행 차선변경">
+  <img  src="carla_sim/assets/real_data.png" width=480 alt="실선구간 차선변경">
 </div>
 
 
