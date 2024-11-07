@@ -65,14 +65,14 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
     conf_thresh_valid = 0.3
     total       = 0.0
     proposals   = 0.0
-    correct     = 0.0
+    fn = 0
     fscore = 0.0
-
-    correct_classification = 0.0
-    total_detected = 0.0
-    fn_detected = 0.0
-    fp_detected = 0.0
-
+    total       = 0.0
+    proposals   = 0.0
+    tp = 0
+    fp = 0
+    fn = 0  
+   
     nbatch = len(test_loader)
     model.eval()
 
@@ -128,7 +128,6 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 #         # 후보 anchor 중에 conf thres 넘는 값이면 추가함
                 #         f_detect.write(str(int(box[6])) + ' ' + str(det_conf) + ' ' + str(x1) + ' ' + str(y1) + ' ' + str(x2) + ' ' + str(y2) + '\n')
                 
-                
                 truths = target[i].view(-1, 5)
                 num_gts = truths_length(truths)
         
@@ -141,43 +140,37 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                         pred_list.append(i)
 
                 for i in range(num_gts):
-                    box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
-                    best_iou = 0
-                    best_j = -1
-                    for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
-                        iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
-                        if iou > best_iou:
-                            best_j = j
-                            best_iou = iou
+                        box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
+                        best_iou = 0
+                        best_j = -1
+                        for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
+                            iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
+                            if iou > best_iou:
+                                best_j = j
+                                best_iou = iou
 
-                    if best_iou >= iou_thresh:
-                        # tp
-                        total_detected += 1
-                        if int(boxes[best_j][6]) == box_gt[6]:
-                            # true positive
-                            correct_classification += 1
-                            correct += 1
-                    else:
-                        #fp
-                        fp_detected += 1
+                        if best_iou >= iou_thresh:
+                            if int(boxes[best_j][6]) == box_gt[6]:
+                                # true positive
+                                tp += 1
+                            else:
+                                # False positive 
+                                fp += 1
+                            
+                        else:
+                            fp += 1
+                        
+                fn = fn + (num_gts - tp)
 
-            fn_detected = total - total_detected
+                precision = 1.0 * tp / (tp + fp)
+                recall = 1.0 * tp / (tp + fn) 
 
-            #assert num_gts == total_detected + correct 
-            precision = 1.0 * total_detected / (total_detected + fp_detected)
-            recall = 1.0 * total_detected / (total_detected + fn_detected)
-            
-            # precision= 1.0*correct / (proposals+eps)
-            # recall = 1.0*correct/ (total+eps)
-
-            # fscore 
-            fscore = 2.0*precision*recall/ (precision+recall+eps)
-            logging("[%d/%d]\t precision: %f, recall: %f, fscore: %f" % (batch_idx, nbatch, precision, recall, fscore))
-
-    classification_accuracy = 1.0 * correct_classification / (total_detected + eps)
-    localization_recall = 1.0 * total_detected / (total + eps)
-
-    print("Classification accuracy: %.3f" % classification_accuracy)
-    print("Localization recall: %.3f" % localization_recall)
+                # fscore 
+                fscore = 2.0*precision*recall/ (precision+recall+eps)
+                logging("[총 %d 개의 batch 중 %d 번째 batch 까지의]\t precision: %f, recall: %f, fscore: %f" % (nbatch, batch_idx+1, precision, recall, fscore))
 
     return loss, loss_cls , loss_box, fscore
+
+
+
+

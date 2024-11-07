@@ -192,6 +192,7 @@ def nms(boxes, nms_thresh):
             out_boxes.append(box_i)
             for j in range(i+1, len(boxes)):
                 box_j = boxes[sortIds[j]]
+                # nms_thresh 이상인 값 제거
                 if bbox_iou(box_i, box_j, x1y1x2y2=False) > nms_thresh:
                     #print(box_i, box_j, bbox_iou(box_i, box_j, x1y1x2y2=False))
                     box_j[4] = 0
@@ -379,7 +380,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
                         conf = det_confs[ind]
                     else:
                         conf = det_confs[ind] * cls_max_confs[ind]
-                    # threshold 0.005 , 0.4
+                    # threshold 0.4
                     if conf > conf_thresh:
                         bcx = xs[ind]
                         bcy = ys[ind]
