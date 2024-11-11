@@ -45,7 +45,7 @@ LISTDATA:
   TEST_VIDEO_FILE: "D:/multilabel_dataset/testlist_video.txt"
   MAX_OBJS: 5
   CLASS_NAMES: [
-    "정상", "방향지시등 불이행", "실선구간 차선변경", "동시 차로변경", "차선물기", 
+    "정상", "방향지시등 불이행 차선변경", "실선구간 차선변경", "동시 차로변경", "차선물기", 
     "2개 차로 연속 변경", "정체구간 차선변경", "안전거리 미확보 차선변경"
   ]
 BACKUP_DIR: "backup/traffic"

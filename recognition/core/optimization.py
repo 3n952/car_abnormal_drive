@@ -56,23 +56,19 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 return i
 
     # Test parameters
-    nms_thresh    = 0.4
+    nms_thresh    = 0.6
     iou_thresh    = 0.5
     eps           = 1e-5
     num_classes = cfg.MODEL.NUM_CLASSES
     anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
     num_anchors = cfg.SOLVER.NUM_ANCHORS
-    conf_thresh_valid = 0.3
-    total       = 0.0
-    proposals   = 0.0
-    fn = 0
+    conf_thresh_valid = 0.4
+
+    total = 0
+    total_tp = 0
+    total_fp = 0
+    total_fn = 0
     fscore = 0.0
-    total       = 0.0
-    proposals   = 0.0
-    tp = 0
-    fp = 0
-    fn = 0  
-   
     nbatch = len(test_loader)
     model.eval()
 
@@ -95,6 +91,12 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
             for i in range(output.size(0)):
                 boxes = all_boxes[i]
                 boxes = nms(boxes, nms_thresh)
+
+                # metric initialize
+                proposals = 0
+                tp = 0
+                fp = 0
+                fn = 0
                 # boxes shape = (147 이하 정수, 7) 
 
                 # nms 결과 box 반환 및 저장
@@ -134,40 +136,45 @@ def test_traffic(cfg, epoch, model, test_loader, loss_module):
                 total = total + num_gts
                 pred_list = [] # LIST OF CONFIDENT BOX INDICES
                 for i in range(len(boxes)):
-                    # det conf > 0.25
-                    if boxes[i][4] > 0.25:
+                    # det conf > 0.40
+                    if boxes[i][4] > 0.40:
                         proposals = proposals+1
                         pred_list.append(i)
 
                 for i in range(num_gts):
-                        box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
-                        best_iou = 0
-                        best_j = -1
-                        for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
-                            iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
-                            if iou > best_iou:
-                                best_j = j
-                                best_iou = iou
-
-                        if best_iou >= iou_thresh:
-                            if int(boxes[best_j][6]) == box_gt[6]:
-                                # true positive
-                                tp += 1
-                            else:
-                                # False positive 
-                                fp += 1
-                            
-                        else:
+                    box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
+                    best_iou = 0
+                    best_j = -1
+                    for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
+                        iou = bbox_iou(box_gt, boxes[j], x1y1x2y2=False)
+                        if iou > best_iou:
+                            best_j = j
+                            best_iou = iou
+                    if i >= len(pred_list) :
+                        break
+                    
+                    if best_iou >= iou_thresh:
+                        if int(boxes[best_j][6]) == box_gt[6]:
+                            # true positive
+                            tp += 1
+                        else: 
                             fp += 1
-                        
-                fn = fn + (num_gts - tp)
+                    else:
+                        fp += 1
 
-                precision = 1.0 * tp / (tp + fp)
-                recall = 1.0 * tp / (tp + fn) 
+                assert num_gts - (tp + fp) >= 0      
+                total_fp = total_fp + fp
+                total_fn = total_fn + (num_gts - (tp + fp))
+                total_tp += tp
 
-                # fscore 
-                fscore = 2.0*precision*recall/ (precision+recall+eps)
-                logging("[총 %d 개의 batch 중 %d 번째 batch 까지의]\t precision: %f, recall: %f, fscore: %f" % (nbatch, batch_idx+1, precision, recall, fscore))
+            precision = 1.0 * total_tp / (total_tp + total_fp)
+            recall = 1.0 * total_tp / (total_tp + total_fn) 
+
+            # f1 score 
+            fscore = 2.0*precision*recall/ (precision+recall+eps)
+
+            # log출력
+            logging("[총 %d 개의 batch 중 %d 번째 batch 까지의]\t precision: %f, recall: %f, fscore: %f" % (nbatch, batch_idx+1, precision, recall, fscore))
 
     return loss, loss_cls , loss_box, fscore
 

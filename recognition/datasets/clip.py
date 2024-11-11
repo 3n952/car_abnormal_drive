@@ -178,7 +178,7 @@ def load_data_detection(base_path, imgpath, train, train_dur, sampling_rate, sha
     # if train:
     #     d = random.randint(1, 2)
         
-    #duration = 8
+    #duration = 10
     for i in reversed(range(train_dur)):
         # make it as a loop
         i_temp = im_ind - i * d

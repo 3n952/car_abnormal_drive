@@ -6,15 +6,14 @@ import os
 import json
 from glob import glob
 import shutil
-from tqdm import tqdm
-from recognition.utils.traffic_multi_label_ import random_split
+from to_multi import random_split
 import re
 
 def make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir):
     abdvtype = {'방향지시등 불이행':0,'실선구간 차로변경':1,'동시 차로 변경':2,'차선 물기':3,'2개 차로 연속 변경':4,'정체구간 차선변경':5,'안전거리 미확보 차선 변경':6}
     # root_dir = '비정상'에서 시작
     # d1 = 01.방향지시등 불이행 ... 등등
-    for d1 in tqdm(os.listdir(source_dir)):
+    for d1 in os.listdir(source_dir):
         class_num = int(str(d1)[:2]) - 1
         data_root_dir = os.path.join(source_dir, d1)
 
@@ -71,7 +70,7 @@ def make_dataset(source_dir, src_img_dir, dst_img_dir, dst_label_dir):
 def mk_splitfiles(root_dir, split_dir, is_train = True):
 
     # d1 = class num
-    for d1 in tqdm(os.listdir(root_dir)):
+    for d1 in os.listdir(root_dir):
         data_root_dir = os.path.join(root_dir, d1)
 
         # 영상단위
@@ -142,7 +141,7 @@ def rename_files_in_directory(directory):
         print(delete_list)
 
 
-def check_in_sequence(directory):
+def check_in_sequence(directory, is_img = True):
     print('====check if file"s name in sequence=======')
       # img_dir = 'dataset/rgb-images'
     for img_dir in os.listdir(directory):
@@ -151,8 +150,12 @@ def check_in_sequence(directory):
             # mov_dir = rgb-image/0/영상단위디렉
             mov_dir = os.path.join(drivingtype_dir, img_dir2)
             #fname - frame단위 이미지 데이터 접근
+
             # 디렉토리 안의 모든 파일 가져오기
-            files = [f for f in os.listdir(mov_dir) if f.endswith('.txt')]
+            if is_img:
+                files = [f for f in os.listdir(mov_dir) if f.endswith('.png')]
+            else:
+                files = [f for f in os.listdir(mov_dir) if f.endswith('.txt')]
             
             # 파일 이름을 숫자로 정렬
             files.sort(key=lambda f: int(f.split('_')[-1][-8:-4]))
@@ -160,15 +163,51 @@ def check_in_sequence(directory):
             # 파일 이름을 순차적으로 다시 붙이기
             for i, file in enumerate(files):
                 #print(file)
-                new_name = file[:-8]+f"{i + 1:04d}.txt"  
-                old_path = os.path.join(mov_dir, file)
-                new_path = os.path.join(mov_dir, new_name)
+                if is_img:
+                    new_name = file[:-8]+f"{i + 1:04d}.png"  
+                    old_path = os.path.join(mov_dir, file)
+                    new_path = os.path.join(mov_dir, new_name)
+                else:
+                    new_name = file[:-8]+f"{i + 1:04d}.txt"  
+                    old_path = os.path.join(mov_dir, file)
+                    new_path = os.path.join(mov_dir, new_name)
                 #print(old_path,'->', new_path)
                 
                 # 파일 이름 변경
                 os.rename(old_path, new_path)
-                # print(f"Renamed: {file} -> {new_name}")
+                print(f"Renamed: {file} -> {new_name}")
 
+def modify_txt_file(directory):
+    # 주어진 디렉토리에서 모든 파일의 경로를 탐색하고 파일에 기록
+    for root, _, files in os.walk(directory):
+        for filename in files:
+            # 파일의 전체 경로 생성
+            file_path = os.path.join(root, filename)
+            with open(file_path, 'r') as file:
+                lines = file.readlines()  # 파일의 모든 라인을 읽어 리스트로 저장
+                
+                modified_lines = []
+                #print('lie',lines)
+                for line in lines:
+                    # 줄의 끝에 있는 줄 바꿈 문자 제거 및 '/'로 나누기
+                    parts = line.strip().split('/')
+                    # 줄 끝의 개행 문자를 제거하고 '/'로 나눔
+                    if int(line[0]) == 0:
+                        continue
+                    else:
+                        new_first_value = str(int(line[0])-1)
+                        parts = new_first_value + parts[0][1:]
+                        #new_parts = parts.replace(" ", "/")
+                        modified_lines.append(parts)
+                    
+                # 결과를 출력 파일에 저장
+                #output_txt = 'new_'+file_path.split('\\')[5]
+                #output_dir = os.path.join(root, output_txt)
+                with open(file_path, 'w') as file:
+                    for modified_line in modified_lines:
+                        file.write(modified_line + '\n')
+
+                print(f"Modified content has been written to {file_path}")
                     
 if __name__ == '__main__':
     source_dir = r'289.국도 CCTV 영상을 통한 비정상주행 판별 데이터\01-1.정식개방데이터\Validation\라벨링데이터\비정상'
@@ -188,7 +227,6 @@ if __name__ == '__main__':
     train_list = r'D:\last_dataset\trainlist.txt'
     test_list = r'D:\last_dataset\testlist.txt'
     random_split(train_list, train_list, test_list)
-    
 
     rename_files_in_directory(dst_img_dir)
     check_in_sequence(dst_img_dir)

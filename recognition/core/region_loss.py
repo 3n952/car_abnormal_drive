@@ -84,7 +84,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
 
         # conf_mask[b] shape -> (5,7,7)
         conf_mask[b] = conf_mask_tt 
-        # conf_mask의 의미: iou가 0.6이상인 box의
+        # conf_mask의 의미: iou가 0.4이상인 box의 mask
         # print(torch.unique(conf_mask))
         # print(torch.sum(conf_mask == 0))
         # print(conf_mask.shape)
@@ -199,7 +199,7 @@ class RegionLoss(nn.Module):
         self.class_scale    = cfg.SOLVER.CLASS_SCALE
         self.coord_scale    = cfg.SOLVER.COORD_SCALE
         self.focalloss      = FocalLoss(class_num=self.num_classes, gamma=2, size_average=False)
-        self.thresh = 0.6
+        self.thresh = 0.4
         
 
         # value, count, sum을 이용하여 average를 구함 -> 진행 배치까지의 평균 loss 계산

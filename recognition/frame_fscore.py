@@ -23,7 +23,7 @@ frame mAp 분석
 '''
 
 if __name__ == '__main__':
-    print('starting measure frame mAP....')
+    print('starting measure frame f1-score....')
 
     # load config
     args  = parser.parse_args()
@@ -134,6 +134,9 @@ if __name__ == '__main__':
                         else:
                             fp += 1
 
+                    print(num_gts, proposals)
+                    print(tp,fp,fn)
+                    print(total_tp, total_fp, total_fn)
                     try: 
                         assert num_gts - (tp + fp) >= 0
                         total_fp = total_fp + fp

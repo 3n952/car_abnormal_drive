@@ -1,19 +1,16 @@
 # train test split
 # 전체이미지에 대한 txt를 묶기
 # multi-labeling 데이터 셋 구축
-import tqdm
 from glob import glob
 import json
 import os 
 import shutil
 import random
-
-from datasets.resoluion_filter import dataset_filter
-
+from resoluion_filter import resolution_filter
 
 def mk_splitfiles(root_dir, split_dir, is_train = True):
 
-    for d1 in tqdm.tqdm(os.listdir(root_dir)):
+    for d1 in os.listdir(root_dir):
         data_root_dir = os.path.join(root_dir, d1)
 
         for d2 in os.listdir(data_root_dir):
@@ -44,7 +41,7 @@ def mk_splitfiles(root_dir, split_dir, is_train = True):
 
 # 원본 데이터셋에서 yowo학습을 위한 rgb-image, label 구성
 def mk_img_(root_dir, rgb_dir):
-    for d1 in tqdm.tqdm(os.listdir(root_dir)):
+    for d1 in os.listdir(root_dir):
         data_root_dir = os.path.join(root_dir, d1)
 
         for d2 in os.listdir(data_root_dir):
@@ -79,7 +76,7 @@ def mk_img_(root_dir, rgb_dir):
 
 def mk_label_(root_dir, label_dir):
     abdvtype = {'정상':0,'방향지시등 불이행':1,'실선구간 차로변경':2,'동시 차로 변경':3,'차선 물기':4,'2개 차로 연속 변경':5,'정체구간 차선변경':6,'안전거리 미확보 차선 변경':7}
-    for d1 in tqdm.tqdm(os.listdir(root_dir)):
+    for d1 in os.listdir(root_dir):
         data_root_dir = os.path.join(root_dir, d1)
 
         for d2 in os.listdir(data_root_dir):
@@ -175,7 +172,7 @@ def filter_mk_splitfiles(tlist, root_dir, split_dir, is_train = True):
                 class_num = int(d2[:2])
 
             # d3 p01_..._03
-            for d3 in tqdm.tqdm(os.listdir(data_root_dir2)):
+            for d3 in os.listdir(data_root_dir2):
 
                     data_root_dir3 = os.path.join(data_root_dir2, d3)
                     if data_root_dir3 in tlist:

@@ -34,7 +34,7 @@ if __name__ == '__main__':
     num_anchors       = cfg.SOLVER.NUM_ANCHORS
     nms_thresh        = 0.6
     conf_thresh_valid = 0.4
-    image_load_mode = 1
+    image_load_mode = 3
 
     '''image_path mode 1,2,3 에 대한 설명
     (1). 1: 정상주행을 포함한 주행라벨링 0(정상),1(방향지시등 불이행),2,...,7  -> multilabel_dataset
@@ -186,11 +186,11 @@ if __name__ == '__main__':
             plt.show()
             plt.close('all')  # 모든 figure 닫기
 
-            # 이미지 저장
-            # try:
-            #     os.mkdir(f'assets/inference/multilabel_train/{frame_idx[0][:-9]}')
-            # except:
-            #     pass
+            #이미지 저장
+            #try:
+            #    os.mkdir(f'results/image/multilabel_train/2nd_multi_sample/{frame_idx[0][:-9]}')
+            #except:
+            #    pass
 
-            # # 이미지 저장
-            # cv2.imwrite(f'assets/inference/multilabel_train/{frame_idx[0][:-9]}/{frame_idx[0][:-4]}.png', image)
+            ## 이미지 저장
+            #cv2.imwrite(f'results/image/multilabel_train/2nd_multi_sample/{frame_idx[0][:-9]}/{frame_idx[0][:-4]}.png', image)

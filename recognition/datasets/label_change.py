@@ -2,7 +2,7 @@ import os
 import tqdm
 
 def label_change(label_dir, output_dir):
-
+    # label_dir 는 정상주행을 포함한 labels 디렉토리여야함.
     except_label = [0, 5]
 
     for dvtype in tqdm.tqdm(os.listdir(label_dir)):
@@ -99,10 +99,10 @@ def train_test_rebuild(train_txt, target_txt):
 
 if __name__ == '__main__':
 
-    label_dir = r'D:\singlelabel_dataset\labels'
-    output_dir = r'D:\singlelabel_dataset\new_labels'
-    label_change(label_dir, output_dir)
+    #label_dir = r'D:\traffic_test\labels'
+    #output_dir = r'D:\traffic_test\new_labels'
+    #label_change(label_dir, output_dir)
 
-    train_txt = r'D:\singlelabel_dataset\testlist.txt'
-    target_txt = r'D:\singlelabel_dataset\new_testlist.txt'
+    train_txt = r'D:\traffic_test\traffic_test.txt'
+    target_txt = r'D:\traffic_test\new_testlist.txt'
     train_test_rebuild(train_txt, target_txt)

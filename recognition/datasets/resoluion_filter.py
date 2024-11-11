@@ -3,9 +3,8 @@
 import os
 import json
 from glob import glob
-from tqdm import tqdm
 
-class resoltion_filter():
+class resolution_filter():
     def __init__(self, json_path, resolution = (1280, 720), is_base = True):
         self.json_path = json_path
         self.resolution = resolution
@@ -69,7 +68,7 @@ class resoltion_filter():
                 json_d2 = os.path.join(json_d1, d2)
                 
                 # d3  ex) 'p01_22021103_072002_an1_036_03' 
-                for d3 in tqdm(os.listdir(json_d2)):
+                for d3 in os.listdir(json_d2):
                     json_d3 = os.path.join(json_d2, d3)
                     
                     mismatch_check = False
