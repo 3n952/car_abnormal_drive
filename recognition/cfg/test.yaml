@@ -1,3 +1,5 @@
+# RESUME PATH / NUM_CLASSES / LISTDATA의 BASE_PTH, TEST_FILE만 바꾸면 됨
+
 TRAIN:
   RESUME_PATH: 'backup/traffic/train3/yowo_traffic_10f_50epochs_best.pth'
   DATASET: traffic  

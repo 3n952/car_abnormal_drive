@@ -83,7 +83,6 @@ if __name__ == '__main__':
         model.eval()
 
         for batch_idx, (frame_idx, data, target) in enumerate(test_loader):
-
             # input data put on gpu
             data = data.cuda()
             with torch.no_grad():
@@ -124,7 +123,7 @@ if __name__ == '__main__':
 
                         if i >= len(pred_list) :
                             break
-
+                        
                         if best_iou >= iou_thresh:
                             if int(boxes[best_j][6]) == box_gt[6]:
                                 # true positive
@@ -134,13 +133,15 @@ if __name__ == '__main__':
                         else:
                             fp += 1
 
-                    print(num_gts, proposals)
-                    print(tp,fp,fn)
-                    print(total_tp, total_fp, total_fn)
+                    fn = num_gts - (tp + fp)
+
+                    #print(num_gts, proposals)
+                    #print(tp,fp,fn)
+                    #print(total_tp, total_fp, total_fn)
                     try: 
                         assert num_gts - (tp + fp) >= 0
                         total_fp = total_fp + fp
-                        total_fn = total_fn + (num_gts - (tp + fp))
+                        total_fn += fn
                         total_tp += tp
                     except:
                         # 라벨 안되어 있는 부분에 대한 값을 측정 불가능 함.

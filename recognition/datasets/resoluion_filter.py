@@ -96,7 +96,7 @@ class resolution_filter():
 if __name__ == "__main__":
 
     jsondir = 'D:/datasets/02.라벨링데이터'
-    filtered = resoltion_filter(jsondir)
+    filtered = resolution_filter(jsondir)
 
     # 637개
     # filtered.__count__()

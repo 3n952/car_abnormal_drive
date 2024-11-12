@@ -23,6 +23,9 @@ frame mAp 분석
 '''
 
 if __name__ == '__main__':
+    #mode = int(input('input data mode'))
+    mode = 2
+
     print('starting measure frame mAP....')
 
     # load config
@@ -75,9 +78,23 @@ if __name__ == '__main__':
         num_anchors = cfg.SOLVER.NUM_ANCHORS
         conf_thresh_valid = 0.4
         total = 0
-        total_tp = 0
-        total_fp = 0
-        total_fn = 0
+        #total_tp = 0
+        #total_fp = 0
+        #total_fn = 0
+
+        if mode == 1:
+            total_aps = [{'ngt':0, 'tp':0, 'fp':0, 'fn':0} for _ in range(8)]
+
+        elif mode == 2:
+            total_aps = [{'ngt':0, 'tp':0, 'fp':0, 'fn':0} for _ in range(7)]
+
+        elif mode == 3:
+            total_aps = [{'ngt':0, 'tp':0, 'fp':0, 'fn':0} for _ in range(5)]
+                        
+        else:
+            print('wrong data mode. it must be one of the (1,2,3) ')
+
+
 
         nbatch = len(test_loader)
         model.eval()
@@ -93,10 +110,18 @@ if __name__ == '__main__':
                 
                 for i in range(output.size(0)):
                     proposals = 0
-                    tp = 0
-                    fp = 0
-                    fn = 0
-                
+                    #tp = 0
+                    #fp = 0
+                    #fn = 0
+
+                    # class mAP initialize
+                    if mode == 1:
+                        ap_list = [{'ngt':0, 'tp':0, 'fp':0, 'fn':0} for _ in range(8)]
+                    elif mode == 2:
+                        ap_list = [{'ngt':0, 'tp':0, 'fp':0, 'fn':0} for _ in range(7)]
+                    elif mode == 3:
+                        ap_list = [{'ngt':0, 'tp':0, 'fp':0, 'fn':0} for _ in range(5)]
+
                     # boxes = [x, y, w, h, det_conf, cls_conf, cls_max_id]
                     boxes = all_boxes[i]
                     boxes = nms(boxes, nms_thresh)
@@ -114,6 +139,7 @@ if __name__ == '__main__':
 
                     for i in range(num_gts):
                         box_gt = [truths[i][1], truths[i][2], truths[i][3], truths[i][4], 1.0, 1.0, truths[i][0]]
+                        ap_list[int(truths[i][0])]['ngt'] += 1
                         best_iou = 0
                         best_j = -1
                         for j in pred_list: # ITERATE THROUGH ONLY CONFIDENT BOXES
@@ -128,30 +154,35 @@ if __name__ == '__main__':
                         if best_iou >= iou_thresh:
                             if int(boxes[best_j][6]) == box_gt[6]:
                                 # true positive
-                                tp += 1
+                                ap_list[int(boxes[best_j][6])]['tp'] += 1
                             else: 
-                                fp += 1
+                                ap_list[int(boxes[best_j][6])]['fp'] += 1
                         else:
-                            fp += 1
+                            ap_list[int(boxes[best_j][6])]['fp'] += 1
 
-                    try: 
-                        assert num_gts - (tp + fp) >= 0
-                        total_fp = total_fp + fp
-                        total_fn = total_fn + (num_gts - (tp + fp))
-                        total_tp += tp
-                    except:
-                        # 라벨 안되어 있는 부분에 대한 값을 측정 불가능 함.
-                        pass
+                    for i in range(len(ap_list)):
+                        ap_list[i]['fn'] = ap_list[i]['ngt'] - (ap_list[i]['tp'] + ap_list[i]['fp'])
 
-                precision = 1.0 * total_tp / (total_tp + total_fp + eps)
-                recall = 1.0 * total_tp / (total_tp + total_fn + eps) 
+                    for idx, total_ap in enumerate(total_aps):
+                        total_aps[idx]['ngt'] += ap_list[idx]['ngt']
+                        total_aps[idx]['tp'] += ap_list[idx]['tp']
+                        total_aps[idx]['fp'] += ap_list[idx]['fp']
+                        total_aps[idx]['fn'] += ap_list[idx]['fn']
+
+                # mAP
+                print('[%d/%d]===============================' %(batch_idx+1, nbatch))
+                for j in range(len(total_aps)):
+                    precision = 1.0 * total_aps[j]['tp'] / (total_aps[j]['tp'] + total_aps[j]['fp'] + eps)
+                    recall = 1.0 * total_aps[j]['tp'] / (total_aps[j]['tp'] + total_aps[j]['fn'] + eps)
+                    fscore = 2.0*precision*recall/ (precision+recall+eps)
+                    print('class %d(%d개)의 precision: %f, recall: %f, f1-score: %f' % (j, total_aps[j]['ngt'], precision, recall, fscore)) 
 
                 # f1 score 
-                fscore = 2.0*precision*recall/ (precision+recall+eps)
-                logging.info("[총 %d 개의 batch 중 %d 번째 batch 까지의]\t precision: %f, recall: %f, f1-score: %f" % (nbatch, batch_idx+1, precision, recall, fscore))
+                #fscore = 2.0*precision*recall/ (precision+recall+eps)
+                #logging.info("[총 %d 개의 batch 중 %d 번째 batch 까지의]\t precision: %f, recall: %f, f1-score: %f" % (nbatch, batch_idx+1, precision, recall, fscore))
 
-        print('================Total score==================')
-        print(f'recall for total test dataset: {recall}')
-        print(f'precision for total test dataset: {precision}')
-        print(f'f1-score for total test dataset: {fscore}')
+        #print('================Total score==================')
+        #print(f'recall for total test dataset: {recall}')
+        #print(f'precision for total test dataset: {precision}')
+        #print(f'f1-score for total test dataset: {fscore}')
         

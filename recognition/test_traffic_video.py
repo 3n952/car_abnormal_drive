@@ -7,6 +7,9 @@ from cfg import parser
 from core.utils import *
 from core.model import YOWO
 
+import warnings
+warnings.filterwarnings("ignore")
+
 ####### Load configuration arguments
 # ---------------------------------------------------------------
 args  = parser.parse_args()
@@ -57,21 +60,23 @@ model.eval()
 # ---------------------------------------------------------------
 
 # 입력 영상 불러오기
-video_path = 'D:/singlelabel_dataset/video/p01_20230108_123006_an7_347_04.mp4'
+video_path = 'assets/test_video2.mp4'
 video_split = video_path.split('/')
 print('video inference starting...')
 #img_mean, img_std = calculate_mean_std(video_path)
 
 cap = cv2.VideoCapture(video_path)
 fps = int(cap.get(cv2.CAP_PROP_FPS))
-print(f'this video has {fps} fps')
-
-# 비디오 저장
-output_video_path = 'examples/traffic_dataset/'+video_split[3]
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+print(f'this video has {fps} fps')
+print(f'resoultion: {int(frame_width)} * {int(frame_height)}')
+
+# 비디오 저장
+output_video_path = 'results/video_test/'+video_split[1]
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter(output_video_path, fourcc, fps-5, (frame_width, frame_height))
+out = cv2.VideoWriter(output_video_path, fourcc, fps-15, (frame_width, frame_height))
 
 queue = []
 while(cap.isOpened()):
@@ -121,7 +126,7 @@ while(cap.isOpened()):
         # output.shape -> 1, 60, 7, 7
         output = model(imgs_gpu)
         preds = []
-        all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 0, 1)
+        all_boxes = get_region_boxes(output, conf_thresh_valid, num_classes, anchors, num_anchors, 1, 1)
         for i in range(output.size(0)):
             boxes = all_boxes[i]
             #print('boxes:', boxes)

@@ -1,7 +1,7 @@
 import cv2
 import os
 
-# 원본 데이터에서 동영상 만드는 경우
+# 원본 데이터(frame)에서 동영상 만드는 경우
 def make_video(img_dir, output_dir, fps = 10.0):
 
     for dvtype in os.listdir(img_dir):
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     #tqdm.tqdm(make_video(img_dir, output_dir))
 
     # 추론 결과를 동영상으로 만드는 경우
-    results_dir = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\results\image\multilabel_train\2nd_multi_sample'
-    output_dir = r'C:\Users\QBIC\Desktop\workspace\car_abnormal_driving\recognition\results\video\multilabel_train\2nd_multi_sample'
+    results_dir = r'results\image\multilabel_train\2nd_multi_sample'
+    output_dir = r'results\video\multilabel_train\2nd_multi_sample'
     make_video2(results_dir, output_dir)
 

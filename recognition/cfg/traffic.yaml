@@ -2,7 +2,7 @@ TRAIN:
   # 5가지 비정상 주행 판별 모델 checkpoint 경로
   RESUME_PATH: 'backup/traffic/train5/yowo_traffic_10f_50epochs_best.pth'
   DATASET: traffic  
-  BATCH_SIZE: 16
+  BATCH_SIZE: 8
   TOTAL_BATCH_SIZE: 59437
   LEARNING_RATE: 1e-4
   EVALUATE: False

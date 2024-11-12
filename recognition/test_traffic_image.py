@@ -79,7 +79,7 @@ if __name__ == '__main__':
                 
         # Test parameters
         nms_thresh    = 0.6
-        iou_thresh    = 0.5
+        iou_thresh    = 0.35
         anchors     = [float(i) for i in cfg.SOLVER.ANCHORS]
         num_anchors = 5
         conf_thresh_valid = 0.4
