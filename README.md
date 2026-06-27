@@ -1,4 +1,5 @@
 # 비정상 주행 탐지 (Recognization of car abnormal driving)
+특허 출원: 무인 단속 카메라 영상 정보 기반 법규 위반 차량 판별 시스템 및 방법 (1020240183905)  
 
 ## Carla_sim
 - Recognition 모델의 학습 데이터를 carla 시뮬레이션으로부터 생성  
